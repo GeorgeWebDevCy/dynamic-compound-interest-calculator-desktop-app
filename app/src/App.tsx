@@ -549,6 +549,9 @@ function App() {
             </div>
           </div>
 
+        </section>
+
+        <section className="panel chart-panel">
           <div className="chart-wrapper">
             <ResponsiveContainer width="100%" height={320}>
               <LineChart data={projection.chartPoints}>
