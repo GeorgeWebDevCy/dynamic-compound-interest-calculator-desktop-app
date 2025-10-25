@@ -11,6 +11,12 @@ import {
   YAxis,
 } from 'recharts'
 import './App.css'
+import {
+  formatHoldingsDate,
+  getWholeMonthsUntilYearEnd,
+  isPurchaseDateInFuture,
+  normalizeDateValue,
+} from './lib/dates'
 import { buildProjection, getNetAnnualRate } from './lib/projection'
 import {
   COMPOUNDING_OPTIONS,
@@ -64,41 +70,6 @@ type DateSettingKey = {
   [K in keyof CompoundSettings]: CompoundSettings[K] extends string ? K : never
 }[keyof CompoundSettings]
 
-const normalizeDateValue = (value: string) => {
-  if (!value) {
-    return ''
-  }
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return value
-  }
-
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) {
-    return ''
-  }
-
-  return parsed.toISOString().slice(0, 10)
-}
-
-const formatHoldingsDate = (value: string) => {
-  const normalized = normalizeDateValue(value)
-  if (!normalized) {
-    return '—'
-  }
-
-  const parsed = new Date(normalized)
-  if (Number.isNaN(parsed.getTime())) {
-    return '—'
-  }
-
-  return parsed.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-}
-
 function App() {
   const [settings, setSettings] = useState<CompoundSettings>(DEFAULT_SETTINGS)
   const [loading, setLoading] = useState(true)
@@ -137,12 +108,26 @@ function App() {
     return () => window.clearTimeout(debounce)
   }, [settings, loading])
 
-  const projection = useMemo(() => buildProjection(settings), [settings])
+  const remainingContributionMonths = useMemo(
+    () => getWholeMonthsUntilYearEnd(settings.vuaaPurchaseDate),
+    [settings.vuaaPurchaseDate],
+  )
+
+  const purchaseDateInFuture = useMemo(
+    () => isPurchaseDateInFuture(settings.vuaaPurchaseDate),
+    [settings.vuaaPurchaseDate],
+  )
+
+  const projection = useMemo(
+    () => buildProjection(settings, { remainingContributionMonths }),
+    [settings, remainingContributionMonths],
+  )
   const expenseDrag = settings.fundExpenseRatio + settings.platformFee
   const netAnnualRate = useMemo(
     () => getNetAnnualRate(settings.annualReturn, expenseDrag),
     [settings.annualReturn, expenseDrag],
   )
+  const currentYear = new Date().getFullYear()
 
   const updateField = <K extends keyof CompoundSettings>(
     field: K,
@@ -360,6 +345,15 @@ function App() {
                 value={normalizeDateValue(settings.vuaaPurchaseDate)}
                 onChange={handleDateChange('vuaaPurchaseDate')}
               />
+              <span className="input-hint">
+                {purchaseDateInFuture
+                  ? 'Purchase date is in the future — contributions begin once it passes.'
+                  : remainingContributionMonths === 0
+                    ? `No whole months remain in ${currentYear} after today.`
+                    : `${remainingContributionMonths} whole month${
+                        remainingContributionMonths === 1 ? '' : 's'
+                      } remain in ${currentYear} to plan contributions.`}
+              </span>
             </label>
           </div>
         </section>
