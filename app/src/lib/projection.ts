@@ -1,5 +1,9 @@
 import type { CompoundSettings } from '../types/finance'
 
+export type ProjectionOptions = {
+  remainingContributionMonths?: number
+}
+
 export type ProjectionPoint = {
   year: number
   balance: number
@@ -25,12 +29,21 @@ export type ProjectionResult = {
 const clampPositive = (value: number, fallback: number) =>
   Number.isFinite(value) && value > 0 ? value : fallback
 
-export const buildProjection = (settings: CompoundSettings): ProjectionResult => {
+export const buildProjection = (
+  settings: CompoundSettings,
+  options: ProjectionOptions = {},
+): ProjectionResult => {
   const compounding = clampPositive(settings.compoundingFrequency, 1)
   const years = clampPositive(settings.years, 1)
 
   const contributionPerPeriod =
     settings.contribution * (settings.contributionFrequency / compounding)
+
+  const normalizedContributionMonths = Math.min(
+    Math.max(options.remainingContributionMonths ?? 12, 0),
+    12,
+  )
+  const firstYearContributionFactor = normalizedContributionMonths / 12
 
   const netAnnualRate = getNetAnnualRate(
     settings.annualReturn,
@@ -48,9 +61,12 @@ export const buildProjection = (settings: CompoundSettings): ProjectionResult =>
 
   for (let period = 1; period <= totalPeriods; period += 1) {
     balance *= 1 + periodicRate
-    if (contributionPerPeriod > 0) {
-      balance += contributionPerPeriod
-      totalContributions += contributionPerPeriod
+    const contributionFactor = period <= compounding ? firstYearContributionFactor : 1
+    const adjustedContribution = contributionPerPeriod * contributionFactor
+
+    if (adjustedContribution > 0) {
+      balance += adjustedContribution
+      totalContributions += adjustedContribution
     }
 
     const isYearBoundary = period % compounding === 0 || period === totalPeriods
