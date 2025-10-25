@@ -57,7 +57,7 @@ Run the following from the `app/` directory:
 
 | Platform | Command | Artifacts | Notes |
 | --- | --- | --- | --- |
-| Windows (NSIS + MSI) | `npm run package -- --win` | `Dynamic Compound Interest-0.1.0.exe` and `.msi` in `app/dist/` | Run on Windows with Developer Mode or elevated privileges so electron-builder can create symlinks during codesign bootstrap. Uses `build/icons/icon.ico`. |
+| Windows (NSIS + MSI) | `npm run package -- --win` | `Dynamic Compound Interest-1.0.0.exe` and `.msi` in `app/dist/` | Run on Windows with Developer Mode or elevated privileges so electron-builder can create symlinks during codesign bootstrap. Uses `build/icons/icon.ico`. |
 | macOS (DMG) | `npm run package -- --mac` | Signed/unsigned `.dmg` in `app/dist/` | Must run on macOS; notarization requires an Apple Developer ID and associated environment variables. |
 | Linux (AppImage) | `npm run package -- --linux` | `.AppImage` in `app/dist/` | Must run on a Linux host (electron-builder cannot produce AppImage on Windows without WSL). Requires `fuse`/`libappimage` available. |
 
