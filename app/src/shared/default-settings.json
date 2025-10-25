@@ -1,0 +1,10 @@
+{
+  "principal": 2000,
+  "contribution": 500,
+  "contributionFrequency": 12,
+  "annualReturn": 9.5,
+  "compoundingFrequency": 12,
+  "years": 15,
+  "fundExpenseRatio": 0.07,
+  "platformFee": 0.5
+}
