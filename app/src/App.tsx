@@ -37,8 +37,8 @@ type DateSettingKey = {
 }[keyof CompoundSettings]
 
 const LANGUAGE_OPTIONS = [
-  { value: 'en', labelKey: 'language.en' },
-  { value: 'el', labelKey: 'language.el' },
+  { value: 'en', labelKey: 'language.en', flag: '🇺🇸' },
+  { value: 'el', labelKey: 'language.el', flag: '🇬🇷' },
 ] as const
 
 const resolveLanguageCode = (language?: string) => {
@@ -254,10 +254,16 @@ function App() {
             aria-label={t('language.label')}
             value={languageCode}
             onChange={handleLanguageChange}
+            className="language-select"
           >
             {LANGUAGE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {t(option.labelKey)}
+              <option
+                key={option.value}
+                value={option.value}
+                aria-label={t(option.labelKey)}
+                title={t(option.labelKey)}
+              >
+                {option.flag}
               </option>
             ))}
           </select>
