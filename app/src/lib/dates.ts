@@ -32,7 +32,7 @@ const parseNormalizedDate = (value: string): Date | null => {
   return parsed
 }
 
-export const formatHoldingsDate = (value: string, locale?: string) => {
+export const formatHoldingsDate = (value: string, _locale?: string) => {
   const normalized = normalizeDateValue(value)
   const parsed = parseNormalizedDate(normalized)
 
@@ -40,11 +40,12 @@ export const formatHoldingsDate = (value: string, locale?: string) => {
     return '—'
   }
 
-  return parsed.toLocaleDateString(locale ?? undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+  const day = String(parsed.getDate()).padStart(2, '0')
+  const month = String(parsed.getMonth() + 1).padStart(2, '0')
+  const year = parsed.getFullYear()
+
+  const separator = '/'
+  return `${day}${separator}${month}${separator}${year}`
 }
 
 export const isPurchaseDateInFuture = (
