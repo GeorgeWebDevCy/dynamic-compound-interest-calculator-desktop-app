@@ -4,11 +4,11 @@ Cross-platform Electron + React desktop experience that models compound interest
 
 ## Screenshots
 
-![Primary dashboard view showing inputs](../docs/screenshots/1.png)
+![Primary dashboard view showing inputs](/docs/screenshots/1.png)
 
-![Primary dashboard view showing waterfall stats, and growth chart](../docs/screenshots/2.png)
+![Primary dashboard view showing waterfall stats, and growth chart](/docs/screenshots/2.png)
 
-![Table and formulas view highlighting yearly breakdown plus projection math](../docs/screenshots/3.png)
+![Table and formulas view highlighting yearly breakdown plus projection math](/docs/screenshots/3.png)
 
 ## Project layout
 
