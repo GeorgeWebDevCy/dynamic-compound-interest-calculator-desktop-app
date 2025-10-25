@@ -8,7 +8,7 @@ Freedom24 + VUAA compound-interest dashboard built with React, TypeScript, Vite,
 
 ![Primary dashboard view showing waterfall stats, and growth chart](../docs/screenshots/2.png)
 
-![Table and formulas view highlighting yearly breakdown plus projection math](../docs/3.png)
+![Table and formulas view highlighting yearly breakdown plus projection math](../docs/screenshots/3.png)
 
 ## Prerequisites
 
