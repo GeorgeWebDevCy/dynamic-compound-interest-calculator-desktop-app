@@ -64,6 +64,8 @@ function App() {
     () => formatDateForInput(DEFAULT_SETTINGS.vuaaPurchaseDate) || '',
   )
   const [isEditingPurchaseDate, setIsEditingPurchaseDate] = useState(false)
+  const [formulasOpen, setFormulasOpen] = useState(false)
+  const formulaPanelId = 'formulas-panel-body'
 
   const currencyFormatter = useMemo(
     () =>
@@ -531,95 +533,6 @@ function App() {
                 </div>
               </dl>
             </div>
-            <div className="formula-card">
-              <h4>{t('projection.formulas.title')}</h4>
-              <p className="muted">{t('projection.formulas.description')}</p>
-              <div className="formula-grid">
-                <FormulaBlock
-                  title={t('projection.formulas.netRate.title')}
-                  equation={t('projection.formulas.netRate.equation')}
-                  result={t('projection.formulas.netRate.result', {
-                    value: percentFormatter.format(netAnnualRate),
-                  })}
-                  items={[
-                    {
-                      label: t('projection.formulas.labels.grossReturn'),
-                      value: percentFormatter.format(grossReturnRate),
-                    },
-                    {
-                      label: t('projection.formulas.labels.expenseDrag'),
-                      value: percentFormatter.format(expenseRate),
-                    },
-                  ]}
-                />
-                <FormulaBlock
-                  title={t('projection.formulas.periodicRate.title')}
-                  equation={t('projection.formulas.periodicRate.equation')}
-                  result={t('projection.formulas.periodicRate.result', {
-                    value: percentFormatter.format(periodicRate),
-                  })}
-                  items={[
-                    {
-                      label: t('projection.formulas.labels.netReturn'),
-                      value: percentFormatter.format(netAnnualRate),
-                    },
-                    {
-                      label: t('projection.formulas.labels.compounding'),
-                      value: t('projection.formulas.periodicRate.compoundingValue', {
-                        value: decimalFormatter.format(compoundingPeriods),
-                      }),
-                    },
-                  ]}
-                />
-                <FormulaBlock
-                  title={t('projection.formulas.contribution.title')}
-                  equation={t('projection.formulas.contribution.equation')}
-                  result={t('projection.formulas.contribution.result', {
-                    value: detailedEuroFormatter.format(contributionPerPeriod),
-                  })}
-                  items={[
-                    {
-                      label: t('projection.formulas.labels.contribution'),
-                      value: detailedEuroFormatter.format(settings.contribution),
-                    },
-                    {
-                      label: t('projection.formulas.labels.contributionFrequency'),
-                      value: t('projection.formulas.contribution.frequencyValue', {
-                        value: decimalFormatter.format(settings.contributionFrequency),
-                      }),
-                    },
-                    {
-                      label: t('projection.formulas.labels.compounding'),
-                      value: t('projection.formulas.periodicRate.compoundingValue', {
-                        value: decimalFormatter.format(compoundingPeriods),
-                      }),
-                    },
-                  ]}
-                />
-                <FormulaBlock
-                  title={t('projection.formulas.firstYear.title')}
-                  equation={t('projection.formulas.firstYear.equation')}
-                  result={t('projection.formulas.firstYear.result', {
-                    value: detailedEuroFormatter.format(firstYearContributionPerPeriod),
-                    factor: factorFormatter.format(firstYearContributionFactor),
-                  })}
-                  items={[
-                    {
-                      label: t('projection.formulas.labels.monthsRemaining'),
-                      value: decimalFormatter.format(normalizedContributionMonths),
-                    },
-                    {
-                      label: t('projection.formulas.labels.firstYearFactor'),
-                      value: factorFormatter.format(firstYearContributionFactor),
-                    },
-                    {
-                      label: t('projection.formulas.labels.firstYearContribution'),
-                      value: detailedEuroFormatter.format(firstYearContributionPerPeriod),
-                    },
-                  ]}
-                />
-              </div>
-            </div>
           </div>
 
           <div className="chart-wrapper">
@@ -680,6 +593,110 @@ function App() {
             </thead>
             <tbody>{renderTable()}</tbody>
           </table>
+        </div>
+      </section>
+
+      <section className={`panel collapsible-panel ${formulasOpen ? 'open' : ''}`}>
+        <button
+          type="button"
+          className="collapsible-trigger"
+          aria-expanded={formulasOpen}
+          aria-controls={formulaPanelId}
+          onClick={() => setFormulasOpen((open) => !open)}
+        >
+          <div>
+            <h2>{t('projection.formulas.title')}</h2>
+            <span className="panel-meta">{t('projection.formulas.description')}</span>
+          </div>
+          <span className="chevron" aria-hidden="true" />
+        </button>
+
+        <div className="collapsible-body" id={formulaPanelId} hidden={!formulasOpen}>
+          <div className="formula-grid">
+            <FormulaBlock
+              title={t('projection.formulas.netRate.title')}
+              equation={t('projection.formulas.netRate.equation')}
+              result={t('projection.formulas.netRate.result', {
+                value: percentFormatter.format(netAnnualRate),
+              })}
+              items={[
+                {
+                  label: t('projection.formulas.labels.grossReturn'),
+                  value: percentFormatter.format(grossReturnRate),
+                },
+                {
+                  label: t('projection.formulas.labels.expenseDrag'),
+                  value: percentFormatter.format(expenseRate),
+                },
+              ]}
+            />
+            <FormulaBlock
+              title={t('projection.formulas.periodicRate.title')}
+              equation={t('projection.formulas.periodicRate.equation')}
+              result={t('projection.formulas.periodicRate.result', {
+                value: percentFormatter.format(periodicRate),
+              })}
+              items={[
+                {
+                  label: t('projection.formulas.labels.netReturn'),
+                  value: percentFormatter.format(netAnnualRate),
+                },
+                {
+                  label: t('projection.formulas.labels.compounding'),
+                  value: t('projection.formulas.periodicRate.compoundingValue', {
+                    value: decimalFormatter.format(compoundingPeriods),
+                  }),
+                },
+              ]}
+            />
+            <FormulaBlock
+              title={t('projection.formulas.contribution.title')}
+              equation={t('projection.formulas.contribution.equation')}
+              result={t('projection.formulas.contribution.result', {
+                value: detailedEuroFormatter.format(contributionPerPeriod),
+              })}
+              items={[
+                {
+                  label: t('projection.formulas.labels.contribution'),
+                  value: detailedEuroFormatter.format(settings.contribution),
+                },
+                {
+                  label: t('projection.formulas.labels.contributionFrequency'),
+                  value: t('projection.formulas.contribution.frequencyValue', {
+                    value: decimalFormatter.format(settings.contributionFrequency),
+                  }),
+                },
+                {
+                  label: t('projection.formulas.labels.compounding'),
+                  value: t('projection.formulas.periodicRate.compoundingValue', {
+                    value: decimalFormatter.format(compoundingPeriods),
+                  }),
+                },
+              ]}
+            />
+            <FormulaBlock
+              title={t('projection.formulas.firstYear.title')}
+              equation={t('projection.formulas.firstYear.equation')}
+              result={t('projection.formulas.firstYear.result', {
+                value: detailedEuroFormatter.format(firstYearContributionPerPeriod),
+                factor: factorFormatter.format(firstYearContributionFactor),
+              })}
+              items={[
+                {
+                  label: t('projection.formulas.labels.monthsRemaining'),
+                  value: decimalFormatter.format(normalizedContributionMonths),
+                },
+                {
+                  label: t('projection.formulas.labels.firstYearFactor'),
+                  value: factorFormatter.format(firstYearContributionFactor),
+                },
+                {
+                  label: t('projection.formulas.labels.firstYearContribution'),
+                  value: detailedEuroFormatter.format(firstYearContributionPerPeriod),
+                },
+              ]}
+            />
+          </div>
         </div>
       </section>
     </div>

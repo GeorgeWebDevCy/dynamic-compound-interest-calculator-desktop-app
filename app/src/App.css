@@ -230,14 +230,57 @@
   font-size: 1.05rem;
 }
 
-.formula-card {
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.02);
-  padding: 1.25rem;
+.collapsible-panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+.collapsible-trigger {
+  width: 100%;
+  border: none;
+  background: none;
+  color: inherit;
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   gap: 1rem;
+  align-items: center;
+  padding: 1.5rem;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.collapsible-trigger h2 {
+  margin: 0;
+}
+
+.collapsible-trigger .panel-meta {
+  display: block;
+  margin-top: 0.35rem;
+}
+
+.collapsible-trigger:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: -4px;
+  border-radius: 1.5rem;
+}
+
+.collapsible-body {
+  padding: 0 1.5rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.chevron {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-right: 2px solid rgba(255, 255, 255, 0.7);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.7);
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.collapsible-panel.open .chevron {
+  transform: rotate(225deg);
 }
 
 .formula-grid {
