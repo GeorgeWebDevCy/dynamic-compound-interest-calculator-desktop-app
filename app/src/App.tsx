@@ -264,7 +264,7 @@ function App() {
                 aria-label={t(option.labelKey)}
                 title={t(option.labelKey)}
               >
-                {option.flag}
+                {`${option.flag} ${t(option.labelKey)}`}
               </option>
             ))}
           </select>

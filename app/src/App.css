@@ -49,6 +49,8 @@
   font-size: 1.25rem;
   line-height: 1;
   color: inherit;
+  font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'Segoe UI', system-ui,
+    sans-serif;
   cursor: pointer;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -62,6 +64,8 @@
 .language-select option {
   font-size: 1.25rem;
   text-align: center;
+  font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'Segoe UI', system-ui,
+    sans-serif;
 }
 
 .ghost {
