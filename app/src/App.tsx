@@ -130,6 +130,14 @@ function App() {
   )
 
   useEffect(() => {
+    if (typeof document === 'undefined') {
+      return
+    }
+
+    document.documentElement.setAttribute('lang', locale)
+  }, [locale])
+
+  useEffect(() => {
     if (!window.configAPI) {
       setLoading(false)
       return
@@ -429,6 +437,7 @@ function App() {
               <span>{t('inputs.purchaseDate.label')}</span>
               <input
                 type="date"
+                lang={locale}
                 value={normalizeDateValue(settings.vuaaPurchaseDate)}
                 onChange={handleDateChange('vuaaPurchaseDate')}
               />
