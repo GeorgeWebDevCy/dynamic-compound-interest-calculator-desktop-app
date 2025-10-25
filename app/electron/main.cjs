@@ -22,7 +22,10 @@ const createWindow = async () => {
     },
   })
 
-  win.once('ready-to-show', () => win.show())
+  win.once('ready-to-show', () => {
+    win.setFullScreen(true)
+    win.show()
+  })
 
   if (isDev) {
     await win.loadURL(process.env.VITE_DEV_SERVER_URL)
