@@ -5,6 +5,7 @@
   "description": "Freedom24 + VUAA compound-interest desktop dashboard",
   "type": "module",
   "main": "electron/main.cjs",
+  "author": "Georg",
   "license": "MIT",
   "scripts": {
     "dev": "concurrently -k \"npm:dev:renderer\" \"npm:dev:electron\"",
