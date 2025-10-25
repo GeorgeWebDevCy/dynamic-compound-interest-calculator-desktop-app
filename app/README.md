@@ -1,73 +1,52 @@
-# React + TypeScript + Vite
+# Dynamic Compound Interest Desktop App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Freedom24 + VUAA compound-interest dashboard built with React, TypeScript, Vite, and Electron.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js **20.19.0+** or **22.12.0+** (Vite 7 hard requirement). Using 20.16.x will trigger `Vite requires Node.js version 20.19+ or 22.12+` during `npm run build` / `npm run package`.
+- npm 10+ (ships with Node 20+).
 
-## React Compiler
+This repo ships with `app/.nvmrc`, so if you use nvm (macOS/Linux) or nvm-windows you can run:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+nvm install 20.19.0
+nvm use 20.19.0
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+If you are not using nvm, download the matching installer from [nodejs.org](https://nodejs.org/en/download) before building or packaging.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Getting Started
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Install dependencies once the correct Node version is active:
+
+```bash
+npm install
 ```
+
+Start the renderer + Electron dev environment:
+
+```bash
+npm run dev
+```
+
+Useful scripts:
+
+- `npm run lint` - ESLint over the whole project.
+- `npm run test` - Vitest suite (runs headless).
+- `npm run build` - Type-check and create a production Vite build under `dist/`.
+- `npm run package` - Builds the renderer and packages the Electron app via `electron-builder`.
+
+## Packaging Tips
+
+- Run `npm run package` only after verifying your Node version with `node -v`.
+- Electron Builder warns when `author`/manufacturer metadata is missing. Add an `author` field to `package.json` to brand MSI artifacts.
+
+## Troubleshooting
+
+| Symptom | Fix |
+| --- | --- |
+| `Vite requires Node.js version 20.19+ or 22.12+` | Activate the version in `.nvmrc` with nvm/nvm-windows or install Node 20.19.0 manually, then rerun `npm install` and `npm run package`. |
+| Native module rebuild issues | Delete `node_modules`, ensure the correct Node version is active, and run `npm install` before packaging. |
+
+For additional details on the Electron/Vite toolchain, see the scripts defined in `package.json`.
