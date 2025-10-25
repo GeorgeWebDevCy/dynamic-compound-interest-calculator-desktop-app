@@ -1,7 +1,7 @@
 {
   "name": "dynamic-compound-interest-calculator",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Freedom24 + VUAA compound-interest desktop dashboard",
   "type": "module",
   "main": "electron/main.cjs",
