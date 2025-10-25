@@ -32,7 +32,7 @@ const parseNormalizedDate = (value: string): Date | null => {
   return parsed
 }
 
-export const formatHoldingsDate = (value: string) => {
+export const formatHoldingsDate = (value: string, locale?: string) => {
   const normalized = normalizeDateValue(value)
   const parsed = parseNormalizedDate(normalized)
 
@@ -40,7 +40,7 @@ export const formatHoldingsDate = (value: string) => {
     return '—'
   }
 
-  return parsed.toLocaleDateString(undefined, {
+  return parsed.toLocaleDateString(locale ?? undefined, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

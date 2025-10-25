@@ -17,25 +17,25 @@ export type CompoundSettings = {
 }
 
 export type FrequencyOption = {
-  label: string
+  labelKey: string
   value: number
 }
 
 export const CONTRIBUTION_OPTIONS: FrequencyOption[] = [
-  { label: 'Monthly (12×)', value: 12 },
-  { label: 'Bi-weekly (26×)', value: 26 },
-  { label: 'Weekly (52×)', value: 52 },
-  { label: 'Quarterly (4×)', value: 4 },
-  { label: 'Annually', value: 1 },
+  { labelKey: 'options.contribution.monthly', value: 12 },
+  { labelKey: 'options.contribution.biweekly', value: 26 },
+  { labelKey: 'options.contribution.weekly', value: 52 },
+  { labelKey: 'options.contribution.quarterly', value: 4 },
+  { labelKey: 'options.contribution.annually', value: 1 },
 ]
 
 export const COMPOUNDING_OPTIONS: FrequencyOption[] = [
-  { label: 'Daily (365×)', value: 365 },
-  { label: 'Weekly (52×)', value: 52 },
-  { label: 'Monthly (12×)', value: 12 },
-  { label: 'Quarterly (4×)', value: 4 },
-  { label: 'Semi-Annual (2×)', value: 2 },
-  { label: 'Annually', value: 1 },
+  { labelKey: 'options.compounding.daily', value: 365 },
+  { labelKey: 'options.compounding.weekly', value: 52 },
+  { labelKey: 'options.compounding.monthly', value: 12 },
+  { labelKey: 'options.compounding.quarterly', value: 4 },
+  { labelKey: 'options.compounding.semiAnnual', value: 2 },
+  { labelKey: 'options.compounding.annually', value: 1 },
 ]
 
 export const DEFAULT_SETTINGS: CompoundSettings = rawDefaults as CompoundSettings

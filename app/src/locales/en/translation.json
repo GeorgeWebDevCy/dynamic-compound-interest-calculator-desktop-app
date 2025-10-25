@@ -1,0 +1,99 @@
+{
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "el": "Greek"
+  },
+  "header": {
+    "eyebrow": "Freedom24 × VUAA preset",
+    "title": "Dynamic Compound Interest Planner",
+    "subtitle": "Adjust the assumptions behind the Vanguard S&P 500 UCITS ETF (VUAA.EU) and Freedom24 custody fees to project growth on desktop with instant feedback.",
+    "reset": "Reset to preset"
+  },
+  "inputs": {
+    "title": "Inputs",
+    "description": "Every change recalculates instantly",
+    "principal": "Initial principal (€)",
+    "contribution": "Periodic contribution (€)",
+    "contributionCadence": "Contribution cadence",
+    "compoundingFrequency": "Compounding frequency",
+    "annualReturn": "Expected annual return (%)",
+    "duration": "Investment duration (years)",
+    "expenseRatio": "ETF expense ratio (VUAA — 0.07%)",
+    "platformFee": "Platform fee (Freedom24 custody %)",
+    "euroBalance": "Freedom24 EUR balance",
+    "usdBalance": "Freedom24 USD balance",
+    "shareCount": "VUAA shares held",
+    "purchasePrice": "Average purchase price (€)",
+    "purchaseDate": {
+      "label": "Last purchase date",
+      "hint": {
+        "future": "Purchase date is in the future — contributions begin once it passes.",
+        "none": "No whole months remain in {{year}} after today.",
+        "remaining_one": "{{count}} whole month remains in {{year}} to plan contributions.",
+        "remaining_other": "{{count}} whole months remain in {{year}} to plan contributions."
+      }
+    }
+  },
+  "options": {
+    "contribution": {
+      "monthly": "Monthly (12×)",
+      "biweekly": "Bi-weekly (26×)",
+      "weekly": "Weekly (52×)",
+      "quarterly": "Quarterly (4×)",
+      "annually": "Annually"
+    },
+    "compounding": {
+      "daily": "Daily (365×)",
+      "weekly": "Weekly (52×)",
+      "monthly": "Monthly (12×)",
+      "quarterly": "Quarterly (4×)",
+      "semiAnnual": "Semi-Annual (2×)",
+      "annually": "Annually"
+    }
+  },
+  "projection": {
+    "title": "Projection",
+    "netReturn": "Net return after expenses: {{value}}",
+    "projectedBalance": {
+      "eyebrow": "Projected balance",
+      "summary": "Over {{years}} years assuming {{grossReturn}} gross return and {{expenseDrag}} expenses."
+    },
+    "statCards": {
+      "totalContributions": "Total contributions",
+      "growth": "Growth / returns",
+      "expenseDrag": "Expense drag",
+      "contributionCadence": "Contribution cadence",
+      "expenseDragValue": "{{value}} yearly",
+      "contributionCadenceValue": "{{value}}× per year"
+    },
+    "holdings": {
+      "title": "Holdings snapshot",
+      "euroBalance": "Freedom24 EUR balance",
+      "usdBalance": "Freedom24 USD balance",
+      "shareCount": "VUAA shares held",
+      "purchasePrice": "Average purchase price",
+      "purchaseDate": "Last purchase date"
+    }
+  },
+  "chart": {
+    "year": "Year {{value}}"
+  },
+  "table": {
+    "title": "Yearly breakdown",
+    "description": "Includes contributions and growth separated",
+    "headers": {
+      "year": "Year",
+      "endingBalance": "End balance",
+      "contributions": "Total contributions",
+      "growth": "Growth / returns"
+    },
+    "yearValue": "Year {{value}}"
+  },
+  "status": {
+    "ready": "Ready",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "error": "Retrying failed"
+  }
+}

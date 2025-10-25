@@ -1,0 +1,99 @@
+{
+  "language": {
+    "label": "Γλώσσα",
+    "en": "Αγγλικά",
+    "el": "Ελληνικά"
+  },
+  "header": {
+    "eyebrow": "Προκαθορισμένες ρυθμίσεις Freedom24 × VUAA",
+    "title": "Δυναμικός Υπολογιστής Ανατοκισμού",
+    "subtitle": "Προσαρμόστε τις υποθέσεις για το Vanguard S&P 500 UCITS ETF (VUAA.EU) και τα τέλη θεματοφυλακής της Freedom24 ώστε να προβλέψετε την ανάπτυξη με άμεση ανατροφοδότηση στην επιφάνεια εργασίας.",
+    "reset": "Επαναφορά στο προεπιλεγμένο"
+  },
+  "inputs": {
+    "title": "Είσοδοι",
+    "description": "Κάθε αλλαγή υπολογίζεται άμεσα",
+    "principal": "Αρχικό κεφάλαιο (€)",
+    "contribution": "Περιοδική κατάθεση (€)",
+    "contributionCadence": "Συχνότητα καταθέσεων",
+    "compoundingFrequency": "Συχνότητα ανατοκισμού",
+    "annualReturn": "Αναμενόμενη ετήσια απόδοση (%)",
+    "duration": "Διάρκεια επένδυσης (έτη)",
+    "expenseRatio": "Δείκτης εξόδων ETF (VUAA — 0,07%)",
+    "platformFee": "Προμήθεια πλατφόρμας (Freedom24 % θεματοφυλακής)",
+    "euroBalance": "Υπόλοιπο Freedom24 σε EUR",
+    "usdBalance": "Υπόλοιπο Freedom24 σε USD",
+    "shareCount": "Μετοχές VUAA",
+    "purchasePrice": "Μέση τιμή αγοράς (€)",
+    "purchaseDate": {
+      "label": "Ημερομηνία τελευταίας αγοράς",
+      "hint": {
+        "future": "Η ημερομηνία αγοράς είναι στο μέλλον — οι καταθέσεις ξεκινούν όταν περάσει.",
+        "none": "Δεν απομένει ολόκληρος μήνας το {{year}} μετά από σήμερα.",
+        "remaining_one": "Απομένει {{count}} πλήρης μήνας το {{year}} για τον προγραμματισμό καταθέσεων.",
+        "remaining_other": "Απομένουν {{count}} πλήρεις μήνες το {{year}} για τον προγραμματισμό καταθέσεων."
+      }
+    }
+  },
+  "options": {
+    "contribution": {
+      "monthly": "Μηνιαία (12×)",
+      "biweekly": "Ανά δύο εβδομάδες (26×)",
+      "weekly": "Εβδομαδιαία (52×)",
+      "quarterly": "Τριμηνιαία (4×)",
+      "annually": "Ετησίως"
+    },
+    "compounding": {
+      "daily": "Καθημερινά (365×)",
+      "weekly": "Εβδομαδιαία (52×)",
+      "monthly": "Μηνιαία (12×)",
+      "quarterly": "Τριμηνιαία (4×)",
+      "semiAnnual": "Εξαμηνιαία (2×)",
+      "annually": "Ετησίως"
+    }
+  },
+  "projection": {
+    "title": "Προβολή",
+    "netReturn": "Καθαρή απόδοση μετά τα έξοδα: {{value}}",
+    "projectedBalance": {
+      "eyebrow": "Προβλεπόμενο υπόλοιπο",
+      "summary": "Σε {{years}} έτη με υπόθεση μικτής απόδοσης {{grossReturn}} και εξόδων {{expenseDrag}}."
+    },
+    "statCards": {
+      "totalContributions": "Συνολικές καταθέσεις",
+      "growth": "Ανάπτυξη / αποδόσεις",
+      "expenseDrag": "Επιβάρυνση εξόδων",
+      "contributionCadence": "Συχνότητα καταθέσεων",
+      "expenseDragValue": "{{value}} ετησίως",
+      "contributionCadenceValue": "{{value}}× ανά έτος"
+    },
+    "holdings": {
+      "title": "Στιγμιότυπο χαρτοφυλακίου",
+      "euroBalance": "Υπόλοιπο Freedom24 σε EUR",
+      "usdBalance": "Υπόλοιπο Freedom24 σε USD",
+      "shareCount": "Μετοχές VUAA",
+      "purchasePrice": "Μέση τιμή αγοράς",
+      "purchaseDate": "Ημερομηνία τελευταίας αγοράς"
+    }
+  },
+  "chart": {
+    "year": "Έτος {{value}}"
+  },
+  "table": {
+    "title": "Ετήσια ανάλυση",
+    "description": "Με διαχωρισμό καταθέσεων και απόδοσης",
+    "headers": {
+      "year": "Έτος",
+      "endingBalance": "Τελικό υπόλοιπο",
+      "contributions": "Συνολικές καταθέσεις",
+      "growth": "Ανάπτυξη / αποδόσεις"
+    },
+    "yearValue": "Έτος {{value}}"
+  },
+  "status": {
+    "ready": "Έτοιμο",
+    "saving": "Αποθήκευση…",
+    "saved": "Αποθηκεύτηκε",
+    "error": "Αποτυχία επαναπροσπάθειας"
+  }
+}

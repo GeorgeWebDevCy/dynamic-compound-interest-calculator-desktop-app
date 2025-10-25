@@ -18,8 +18,10 @@
     "package": "npm run build && electron-builder"
   },
   "dependencies": {
+    "i18next": "^23.16.8",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-i18next": "^15.5.2",
     "recharts": "^2.13.3"
   },
   "devDependencies": {
