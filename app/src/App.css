@@ -203,6 +203,73 @@
   font-size: 1.05rem;
 }
 
+.formula-card {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formula-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.formula-block {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 0.9rem;
+  background: rgba(8, 12, 20, 0.45);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formula-block-title {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.75rem;
+}
+
+.formula-equation {
+  font-family: 'IBM Plex Mono', 'SFMono-Regular', ui-monospace, SFMono-Regular,
+    Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.95rem;
+  color: #e5e7eb;
+}
+
+.formula-result {
+  font-size: 1.05rem;
+}
+
+.formula-values {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.formula-value {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.formula-value-label {
+  color: #9ba7bf;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.formula-value-output {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
 .chart-wrapper {
   margin-top: 1rem;
   width: 100%;
