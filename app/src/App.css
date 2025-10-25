@@ -340,6 +340,16 @@
   font-size: 1rem;
 }
 
+.withdrawal-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.withdrawal-cell strong {
+  font-size: 1.05rem;
+}
+
 .chart-wrapper {
   margin-top: 1rem;
   width: 100%;

@@ -271,6 +271,12 @@ function App() {
     setSettings({ ...DEFAULT_SETTINGS })
   }
 
+  const formatWithdrawalDate = (yearValue: number) => {
+    const payoutYear = Math.max(currentYear - 1 + Math.ceil(yearValue), currentYear)
+    const iso = `${payoutYear}-12-31`
+    return formatDateForInput(iso) || `31/12/${payoutYear}`
+  }
+
   const renderTable = () =>
     projection.table.map((row) => (
       <tr key={row.year}>
@@ -278,6 +284,14 @@ function App() {
         <td>{currencyFormatter.format(row.endingBalance)}</td>
         <td>{currencyFormatter.format(row.contributions)}</td>
         <td>{currencyFormatter.format(row.growth)}</td>
+        <td>
+          <div className="withdrawal-cell">
+            <strong>{currencyFormatter.format(row.allowedWithdrawal)}</strong>
+            <span className="muted">
+              {t('table.withdrawalDetail', { date: formatWithdrawalDate(row.year) })}
+            </span>
+          </div>
+        </td>
       </tr>
     ))
 
@@ -589,6 +603,7 @@ function App() {
                 <th>{t('table.headers.endingBalance')}</th>
                 <th>{t('table.headers.contributions')}</th>
                 <th>{t('table.headers.growth')}</th>
+                <th>{t('table.headers.withdrawal')}</th>
               </tr>
             </thead>
             <tbody>{renderTable()}</tbody>

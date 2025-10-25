@@ -119,9 +119,11 @@
       "year": "Έτος",
       "endingBalance": "Τελικό υπόλοιπο",
       "contributions": "Συνολικές καταθέσεις",
-      "growth": "Ανάπτυξη / αποδόσεις"
+      "growth": "Ανάπτυξη / αποδόσεις",
+      "withdrawal": "Επιτρεπόμενη ρευστοποίηση (4%)"
     },
-    "yearValue": "Έτος {{value}}"
+    "yearValue": "Έτος {{value}}",
+    "withdrawalDetail": "Διαθέσιμο μετά τις {{date}}"
   },
   "status": {
     "ready": "Έτοιμο",

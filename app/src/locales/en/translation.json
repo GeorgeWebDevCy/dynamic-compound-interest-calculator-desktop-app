@@ -5,7 +5,7 @@
     "el": "Greek"
   },
   "header": {
-    "eyebrow": "Freedom24 × VUAA preset",
+    "eyebrow": "Freedom24 \u00d7 VUAA preset",
     "title": "Dynamic Compound Interest Planner",
     "subtitle": "Adjust the assumptions behind the Vanguard S&P 500 UCITS ETF (VUAA.EU) and Freedom24 custody fees to project growth on desktop with instant feedback.",
     "reset": "Reset to preset"
@@ -13,20 +13,20 @@
   "inputs": {
     "title": "Inputs",
     "description": "Every change recalculates instantly",
-    "principal": "Initial principal (€)",
-    "contribution": "Periodic contribution (€)",
+    "principal": "Initial principal (\u20ac)",
+    "contribution": "Periodic contribution (\u20ac)",
     "contributionCadence": "Contribution cadence",
     "compoundingFrequency": "Compounding frequency",
     "annualReturn": "Expected annual return (%)",
     "duration": "Investment duration (years)",
-    "expenseRatio": "ETF expense ratio (VUAA — 0.07%)",
+    "expenseRatio": "ETF expense ratio (VUAA \u2014 0.07%)",
     "platformFee": "Platform fee (Freedom24 custody %)",
     "shareCount": "VUAA shares held",
-    "purchasePrice": "Average purchase price (€)",
+    "purchasePrice": "Average purchase price (\u20ac)",
     "purchaseDate": {
       "label": "Last purchase date",
       "hint": {
-        "future": "Purchase date is in the future — contributions begin once it passes.",
+        "future": "Purchase date is in the future \u2014 contributions begin once it passes.",
         "none": "No whole months remain in {{year}} after today.",
         "remaining_one": "{{count}} whole month remains in {{year}} to plan contributions.",
         "remaining_other": "{{count}} whole months remain in {{year}} to plan contributions."
@@ -35,18 +35,18 @@
   },
   "options": {
     "contribution": {
-      "monthly": "Monthly (12×)",
-      "biweekly": "Bi-weekly (26×)",
-      "weekly": "Weekly (52×)",
-      "quarterly": "Quarterly (4×)",
+      "monthly": "Monthly (12\u00d7)",
+      "biweekly": "Bi-weekly (26\u00d7)",
+      "weekly": "Weekly (52\u00d7)",
+      "quarterly": "Quarterly (4\u00d7)",
       "annually": "Annually"
     },
     "compounding": {
-      "daily": "Daily (365×)",
-      "weekly": "Weekly (52×)",
-      "monthly": "Monthly (12×)",
-      "quarterly": "Quarterly (4×)",
-      "semiAnnual": "Semi-Annual (2×)",
+      "daily": "Daily (365\u00d7)",
+      "weekly": "Weekly (52\u00d7)",
+      "monthly": "Monthly (12\u00d7)",
+      "quarterly": "Quarterly (4\u00d7)",
+      "semiAnnual": "Semi-Annual (2\u00d7)",
       "annually": "Annually"
     }
   },
@@ -63,7 +63,7 @@
       "expenseDrag": "Expense drag",
       "contributionCadence": "Contribution cadence",
       "expenseDragValue": "{{value}} yearly",
-      "contributionCadenceValue": "{{value}}× per year"
+      "contributionCadenceValue": "{{value}}\u00d7 per year"
     },
     "holdings": {
       "title": "Holdings snapshot",
@@ -76,30 +76,30 @@
       "description": "The projection uses the current inputs in the equations below.",
       "netRate": {
         "title": "Net annual rate",
-        "equation": "rₙₑₜ = (1 + r_gross) × (1 - expenses) − 1",
-        "result": "rₙₑₜ = {{value}}"
+        "equation": "r\u2099\u2091\u209c = (1 + r_gross) \u00d7 (1 - expenses) \u2212 1",
+        "result": "r\u2099\u2091\u209c = {{value}}"
       },
       "periodicRate": {
         "title": "Periodic compounding rate",
-        "equation": "r_periodic = (1 + rₙₑₜ)^(1 ÷ n) − 1",
+        "equation": "r_periodic = (1 + r\u2099\u2091\u209c)^(1 \u00f7 n) \u2212 1",
         "result": "r_periodic = {{value}}",
-        "compoundingValue": "{{value}}× per year"
+        "compoundingValue": "{{value}}\u00d7 per year"
       },
       "contribution": {
         "title": "Contribution per period",
-        "equation": "C_period = contribution × (frequency ÷ n)",
+        "equation": "C_period = contribution \u00d7 (frequency \u00f7 n)",
         "result": "C_period = {{value}}",
-        "frequencyValue": "{{value}}× per year"
+        "frequencyValue": "{{value}}\u00d7 per year"
       },
       "firstYear": {
         "title": "First-year contribution weight",
-        "equation": "C_first = C_period × (months_remaining ÷ 12)",
-        "result": "C_first = {{value}} (factor {{factor}}×)"
+        "equation": "C_first = C_period \u00d7 (months_remaining \u00f7 12)",
+        "result": "C_first = {{value}} (factor {{factor}}\u00d7)"
       },
       "labels": {
         "grossReturn": "Gross return (r_gross)",
         "expenseDrag": "Expense drag",
-        "netReturn": "Net annual rate (rₙₑₜ)",
+        "netReturn": "Net annual rate (r\u2099\u2091\u209c)",
         "compounding": "Compounding periods (n)",
         "contribution": "Contribution",
         "contributionFrequency": "Contribution cadence",
@@ -119,13 +119,15 @@
       "year": "Year",
       "endingBalance": "End balance",
       "contributions": "Total contributions",
-      "growth": "Growth / returns"
+      "growth": "Growth / returns",
+      "withdrawal": "Allowed withdrawal (4%)"
     },
-    "yearValue": "Year {{value}}"
+    "yearValue": "Year {{value}}",
+    "withdrawalDetail": "Available after {{date}}"
   },
   "status": {
     "ready": "Ready",
-    "saving": "Saving…",
+    "saving": "Saving\u2026",
     "saved": "Saved",
     "error": "Retrying failed"
   }

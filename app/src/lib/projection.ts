@@ -9,11 +9,14 @@ export type ProjectionPoint = {
   balance: number
 }
 
+const WITHDRAWAL_RATE = 0.04
+
 export type YearlyBreakdown = {
   year: number
   endingBalance: number
   contributions: number
   growth: number
+  allowedWithdrawal: number
 }
 
 export type ProjectionResult = {
@@ -79,6 +82,7 @@ export const buildProjection = (
         endingBalance: balance,
         contributions: totalContributions,
         growth,
+        allowedWithdrawal: balance * WITHDRAWAL_RATE,
       })
     }
   }
