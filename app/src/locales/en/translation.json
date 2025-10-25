@@ -21,8 +21,6 @@
     "duration": "Investment duration (years)",
     "expenseRatio": "ETF expense ratio (VUAA — 0.07%)",
     "platformFee": "Platform fee (Freedom24 custody %)",
-    "euroBalance": "Freedom24 EUR balance",
-    "usdBalance": "Freedom24 USD balance",
     "shareCount": "VUAA shares held",
     "purchasePrice": "Average purchase price (€)",
     "purchaseDate": {
@@ -69,8 +67,6 @@
     },
     "holdings": {
       "title": "Holdings snapshot",
-      "euroBalance": "Freedom24 EUR balance",
-      "usdBalance": "Freedom24 USD balance",
       "shareCount": "VUAA shares held",
       "purchasePrice": "Average purchase price",
       "purchaseDate": "Last purchase date"

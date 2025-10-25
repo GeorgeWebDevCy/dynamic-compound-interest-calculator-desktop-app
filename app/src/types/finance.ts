@@ -9,8 +9,6 @@ export type CompoundSettings = {
   years: number
   fundExpenseRatio: number
   platformFee: number
-  freedom24EuroBalance: number
-  freedom24UsdBalance: number
   vuaaShareCount: number
   vuaaPurchasePrice: number
   vuaaPurchaseDate: string

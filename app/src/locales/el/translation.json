@@ -21,8 +21,6 @@
     "duration": "Διάρκεια επένδυσης (έτη)",
     "expenseRatio": "Δείκτης εξόδων ETF (VUAA — 0,07%)",
     "platformFee": "Προμήθεια πλατφόρμας (Freedom24 % θεματοφυλακής)",
-    "euroBalance": "Υπόλοιπο Freedom24 σε EUR",
-    "usdBalance": "Υπόλοιπο Freedom24 σε USD",
     "shareCount": "Μετοχές VUAA",
     "purchasePrice": "Μέση τιμή αγοράς (€)",
     "purchaseDate": {
@@ -69,8 +67,6 @@
     },
     "holdings": {
       "title": "Στιγμιότυπο χαρτοφυλακίου",
-      "euroBalance": "Υπόλοιπο Freedom24 σε EUR",
-      "usdBalance": "Υπόλοιπο Freedom24 σε USD",
       "shareCount": "Μετοχές VUAA",
       "purchasePrice": "Μέση τιμή αγοράς",
       "purchaseDate": "Ημερομηνία τελευταίας αγοράς"

@@ -81,16 +81,6 @@ function App() {
     [locale],
   )
 
-  const usdCurrencyFormatter = useMemo(
-    () =>
-      createPrefixedCurrencyFormatter(locale, {
-        style: 'currency',
-        currency: 'USD',
-        maximumFractionDigits: 0,
-      }),
-    [locale],
-  )
-
   const compactCurrencyFormatter = useMemo(
     () =>
       createPrefixedCurrencyFormatter(locale, {
@@ -390,28 +380,6 @@ function App() {
             </label>
 
             <label>
-              <span>{t('inputs.euroBalance')}</span>
-              <input
-                type="number"
-                min={0}
-                step={50}
-                value={settings.freedom24EuroBalance}
-                onChange={handleNumericInputChange('freedom24EuroBalance')}
-              />
-            </label>
-
-            <label>
-              <span>{t('inputs.usdBalance')}</span>
-              <input
-                type="number"
-                min={0}
-                step={50}
-                value={settings.freedom24UsdBalance}
-                onChange={handleNumericInputChange('freedom24UsdBalance')}
-              />
-            </label>
-
-            <label>
               <span>{t('inputs.shareCount')}</span>
               <input
                 type="number"
@@ -502,14 +470,6 @@ function App() {
             <div className="holdings-card">
               <h4>{t('projection.holdings.title')}</h4>
               <dl>
-                <div>
-                  <dt>{t('projection.holdings.euroBalance')}</dt>
-                  <dd>{currencyFormatter.format(settings.freedom24EuroBalance)}</dd>
-                </div>
-                <div>
-                  <dt>{t('projection.holdings.usdBalance')}</dt>
-                  <dd>{usdCurrencyFormatter.format(settings.freedom24UsdBalance)}</dd>
-                </div>
                 <div>
                   <dt>{t('projection.holdings.shareCount')}</dt>
                   <dd>
