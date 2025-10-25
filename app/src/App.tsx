@@ -18,6 +18,7 @@ import {
   isPurchaseDateInFuture,
   normalizeDateValue,
 } from './lib/dates'
+import { createPrefixedCurrencyFormatter } from './lib/currency'
 import { buildProjection, getNetAnnualRate } from './lib/projection'
 import {
   COMPOUNDING_OPTIONS,
@@ -61,7 +62,7 @@ function App() {
 
   const currencyFormatter = useMemo(
     () =>
-      new Intl.NumberFormat(locale, {
+      createPrefixedCurrencyFormatter(locale, {
         style: 'currency',
         currency: 'EUR',
         maximumFractionDigits: 0,
@@ -71,7 +72,7 @@ function App() {
 
   const detailedEuroFormatter = useMemo(
     () =>
-      new Intl.NumberFormat(locale, {
+      createPrefixedCurrencyFormatter(locale, {
         style: 'currency',
         currency: 'EUR',
         minimumFractionDigits: 2,
@@ -82,7 +83,7 @@ function App() {
 
   const usdCurrencyFormatter = useMemo(
     () =>
-      new Intl.NumberFormat(locale, {
+      createPrefixedCurrencyFormatter(locale, {
         style: 'currency',
         currency: 'USD',
         maximumFractionDigits: 0,
@@ -92,7 +93,7 @@ function App() {
 
   const compactCurrencyFormatter = useMemo(
     () =>
-      new Intl.NumberFormat(locale, {
+      createPrefixedCurrencyFormatter(locale, {
         style: 'currency',
         currency: 'EUR',
         maximumFractionDigits: 1,
