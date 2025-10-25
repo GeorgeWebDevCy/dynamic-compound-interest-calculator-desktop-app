@@ -49,7 +49,7 @@ const resolveLanguageCode = (language?: string) => {
   return language.split('-')[0]
 }
 
-const resolveLocale = (language: string) => (language === 'el' ? 'el-GR' : 'en-US')
+const resolveLocale = (language: string) => (language === 'el' ? 'el-GR' : 'en-GB')
 
 function App() {
   const { t, i18n } = useTranslation()

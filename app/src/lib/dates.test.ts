@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { getWholeMonthsUntilYearEnd, isPurchaseDateInFuture } from './dates'
+import {
+  formatHoldingsDate,
+  getWholeMonthsUntilYearEnd,
+  isPurchaseDateInFuture,
+} from './dates'
 
 describe('getWholeMonthsUntilYearEnd', () => {
   it('returns remaining months when the purchase happened earlier this year', () => {
@@ -29,5 +33,16 @@ describe('isPurchaseDateInFuture', () => {
     const referenceDate = new Date(2024, 4, 15)
     expect(isPurchaseDateInFuture('2024-04-30', referenceDate)).toBe(false)
     expect(isPurchaseDateInFuture('2024-05-15', referenceDate)).toBe(false)
+  })
+})
+
+describe('formatHoldingsDate', () => {
+  it('returns a formatted date with day/month/year ordering', () => {
+    expect(formatHoldingsDate('2024-03-05')).toBe('05/03/2024')
+  })
+
+  it('returns em dash for invalid inputs', () => {
+    expect(formatHoldingsDate('')).toBe('—')
+    expect(formatHoldingsDate('not-a-date')).toBe('—')
   })
 })
