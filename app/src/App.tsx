@@ -1,5 +1,6 @@
 import type { ChangeEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { TooltipProps } from 'recharts'
 import {
   CartesianGrid,
@@ -27,41 +28,6 @@ import {
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'EUR',
-  maximumFractionDigits: 0,
-})
-
-const detailedEuroFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'EUR',
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-})
-
-const usdCurrencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 0,
-})
-
-const compactCurrencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'EUR',
-  maximumFractionDigits: 1,
-  notation: 'compact',
-})
-
-const percentFormatter = new Intl.NumberFormat('en-US', {
-  style: 'percent',
-  minimumFractionDigits: 2,
-})
-
-const decimalFormatter = new Intl.NumberFormat('en-US', {
-  maximumFractionDigits: 1,
-})
-
 type NumericSettingKey = {
   [K in keyof CompoundSettings]: CompoundSettings[K] extends number ? K : never
 }[keyof CompoundSettings]
@@ -70,10 +36,88 @@ type DateSettingKey = {
   [K in keyof CompoundSettings]: CompoundSettings[K] extends string ? K : never
 }[keyof CompoundSettings]
 
+const LANGUAGE_OPTIONS = [
+  { value: 'en', labelKey: 'language.en' },
+  { value: 'el', labelKey: 'language.el' },
+] as const
+
+const resolveLanguageCode = (language?: string) => {
+  if (!language) {
+    return 'en'
+  }
+
+  return language.split('-')[0]
+}
+
+const resolveLocale = (language: string) => (language === 'el' ? 'el-GR' : 'en-US')
+
 function App() {
+  const { t, i18n } = useTranslation()
+  const languageCode = resolveLanguageCode(i18n.resolvedLanguage ?? i18n.language)
+  const locale = resolveLocale(languageCode)
   const [settings, setSettings] = useState<CompoundSettings>(DEFAULT_SETTINGS)
   const [loading, setLoading] = useState(true)
   const [saveState, setSaveState] = useState<SaveState>('idle')
+
+  const currencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: 'EUR',
+        maximumFractionDigits: 0,
+      }),
+    [locale],
+  )
+
+  const detailedEuroFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: 'EUR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+    [locale],
+  )
+
+  const usdCurrencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0,
+      }),
+    [locale],
+  )
+
+  const compactCurrencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: 'EUR',
+        maximumFractionDigits: 1,
+        notation: 'compact',
+      }),
+    [locale],
+  )
+
+  const percentFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(locale, {
+        style: 'percent',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+    [locale],
+  )
+
+  const decimalFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(locale, {
+        maximumFractionDigits: 1,
+      }),
+    [locale],
+  )
 
   useEffect(() => {
     if (!window.configAPI) {
@@ -155,6 +199,10 @@ function App() {
       updateField(field, normalized as CompoundSettings[DateSettingKey])
     }
 
+  const handleLanguageChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    void i18n.changeLanguage(event.target.value)
+  }
+
   const resetDefaults = () => {
     setSettings({ ...DEFAULT_SETTINGS })
   }
@@ -162,7 +210,7 @@ function App() {
   const renderTable = () =>
     projection.table.map((row) => (
       <tr key={row.year}>
-        <td>Year {decimalFormatter.format(row.year)}</td>
+        <td>{t('table.yearValue', { value: decimalFormatter.format(row.year) })}</td>
         <td>{currencyFormatter.format(row.endingBalance)}</td>
         <td>{currencyFormatter.format(row.contributions)}</td>
         <td>{currencyFormatter.format(row.growth)}</td>
@@ -173,17 +221,25 @@ function App() {
     <div className="app-shell">
       <header className="app-header">
         <div>
-          <p className="eyebrow">Freedom24 × VUAA preset</p>
-          <h1>Dynamic Compound Interest Planner</h1>
-          <p className="subtitle">
-            Adjust the assumptions behind the Vanguard S&P 500 UCITS ETF (VUAA.EU) and Freedom24
-            custody fees to project growth on desktop with instant feedback.
-          </p>
+          <p className="eyebrow">{t('header.eyebrow')}</p>
+          <h1>{t('header.title')}</h1>
+          <p className="subtitle">{t('header.subtitle')}</p>
         </div>
         <div className="header-actions">
+          <select
+            aria-label={t('language.label')}
+            value={languageCode}
+            onChange={handleLanguageChange}
+          >
+            {LANGUAGE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {t(option.labelKey)}
+              </option>
+            ))}
+          </select>
           <StatusBadge state={loading ? 'saving' : saveState} />
           <button className="ghost" type="button" onClick={resetDefaults}>
-            Reset to preset
+            {t('header.reset')}
           </button>
         </div>
       </header>
@@ -191,13 +247,13 @@ function App() {
       <main className="grid">
         <section className="panel">
           <div className="panel-head">
-            <h2>Inputs</h2>
-            <span className="panel-meta">Every change recalculates instantly</span>
+            <h2>{t('inputs.title')}</h2>
+            <span className="panel-meta">{t('inputs.description')}</span>
           </div>
 
           <div className="input-grid">
             <label>
-              <span>Initial principal (€)</span>
+              <span>{t('inputs.principal')}</span>
               <input
                 type="number"
                 min={0}
@@ -208,7 +264,7 @@ function App() {
             </label>
 
             <label>
-              <span>Periodic contribution (€)</span>
+              <span>{t('inputs.contribution')}</span>
               <input
                 type="number"
                 min={0}
@@ -219,35 +275,35 @@ function App() {
             </label>
 
             <label>
-              <span>Contribution cadence</span>
+              <span>{t('inputs.contributionCadence')}</span>
               <select
                 value={settings.contributionFrequency}
                 onChange={handleNumericInputChange('contributionFrequency')}
               >
                 {CONTRIBUTION_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.labelKey)}
                   </option>
                 ))}
               </select>
             </label>
 
             <label>
-              <span>Compounding frequency</span>
+              <span>{t('inputs.compoundingFrequency')}</span>
               <select
                 value={settings.compoundingFrequency}
                 onChange={handleNumericInputChange('compoundingFrequency')}
               >
                 {COMPOUNDING_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.labelKey)}
                   </option>
                 ))}
               </select>
             </label>
 
             <label>
-              <span>Expected annual return (%)</span>
+              <span>{t('inputs.annualReturn')}</span>
               <input
                 type="number"
                 min={0}
@@ -259,7 +315,7 @@ function App() {
             </label>
 
             <label>
-              <span>Investment duration (years)</span>
+              <span>{t('inputs.duration')}</span>
               <input
                 type="number"
                 min={1}
@@ -271,7 +327,7 @@ function App() {
             </label>
 
             <label>
-              <span>ETF expense ratio (VUAA — 0.07%)</span>
+              <span>{t('inputs.expenseRatio')}</span>
               <input
                 type="number"
                 min={0}
@@ -283,7 +339,7 @@ function App() {
             </label>
 
             <label>
-              <span>Platform fee (Freedom24 custody %)</span>
+              <span>{t('inputs.platformFee')}</span>
               <input
                 type="number"
                 min={0}
@@ -295,7 +351,7 @@ function App() {
             </label>
 
             <label>
-              <span>Freedom24 EUR balance</span>
+              <span>{t('inputs.euroBalance')}</span>
               <input
                 type="number"
                 min={0}
@@ -306,7 +362,7 @@ function App() {
             </label>
 
             <label>
-              <span>Freedom24 USD balance</span>
+              <span>{t('inputs.usdBalance')}</span>
               <input
                 type="number"
                 min={0}
@@ -317,7 +373,7 @@ function App() {
             </label>
 
             <label>
-              <span>VUAA shares held</span>
+              <span>{t('inputs.shareCount')}</span>
               <input
                 type="number"
                 min={0}
@@ -328,7 +384,7 @@ function App() {
             </label>
 
             <label>
-              <span>Average purchase price (€)</span>
+              <span>{t('inputs.purchasePrice')}</span>
               <input
                 type="number"
                 min={0}
@@ -339,7 +395,7 @@ function App() {
             </label>
 
             <label>
-              <span>Last purchase date</span>
+              <span>{t('inputs.purchaseDate.label')}</span>
               <input
                 type="date"
                 value={normalizeDateValue(settings.vuaaPurchaseDate)}
@@ -347,12 +403,13 @@ function App() {
               />
               <span className="input-hint">
                 {purchaseDateInFuture
-                  ? 'Purchase date is in the future — contributions begin once it passes.'
+                  ? t('inputs.purchaseDate.hint.future')
                   : remainingContributionMonths === 0
-                    ? `No whole months remain in ${currentYear} after today.`
-                    : `${remainingContributionMonths} whole month${
-                        remainingContributionMonths === 1 ? '' : 's'
-                      } remain in ${currentYear} to plan contributions.`}
+                    ? t('inputs.purchaseDate.hint.none', { year: currentYear })
+                    : t('inputs.purchaseDate.hint.remaining', {
+                        count: remainingContributionMonths,
+                        year: currentYear,
+                      })}
               </span>
             </label>
           </div>
@@ -360,52 +417,74 @@ function App() {
 
         <section className="panel">
           <div className="panel-head">
-            <h2>Projection</h2>
+            <h2>{t('projection.title')}</h2>
             <span className="panel-meta">
-              Net return after expenses: {percentFormatter.format(netAnnualRate)}
+              {t('projection.netReturn', {
+                value: percentFormatter.format(netAnnualRate),
+              })}
             </span>
           </div>
 
           <div className="projection-summary">
             <div>
-              <p className="eyebrow">Projected balance</p>
+              <p className="eyebrow">{t('projection.projectedBalance.eyebrow')}</p>
               <h3>{currencyFormatter.format(projection.totals.endingBalance)}</h3>
               <p className="muted">
-                Over {settings.years} years assuming {percentFormatter.format(settings.annualReturn / 100)} gross
-                return and {percentFormatter.format(expenseDrag / 100)} expenses.
+                {t('projection.projectedBalance.summary', {
+                  years: settings.years,
+                  grossReturn: percentFormatter.format(settings.annualReturn / 100),
+                  expenseDrag: percentFormatter.format(expenseDrag / 100),
+                })}
               </p>
             </div>
             <div className="stat-grid">
-              <StatCard label="Total contributions" value={currencyFormatter.format(projection.totals.contributions)} />
-              <StatCard label="Growth / returns" value={currencyFormatter.format(projection.totals.growth)} />
-              <StatCard label="Expense drag" value={`${expenseDrag.toFixed(2)}% yearly`} />
               <StatCard
-                label="Contribution cadence"
-                value={`${settings.contributionFrequency}× per year`}
+                label={t('projection.statCards.totalContributions')}
+                value={currencyFormatter.format(projection.totals.contributions)}
+              />
+              <StatCard
+                label={t('projection.statCards.growth')}
+                value={currencyFormatter.format(projection.totals.growth)}
+              />
+              <StatCard
+                label={t('projection.statCards.expenseDrag')}
+                value={t('projection.statCards.expenseDragValue', {
+                  value: percentFormatter.format(expenseDrag / 100),
+                })}
+              />
+              <StatCard
+                label={t('projection.statCards.contributionCadence')}
+                value={t('projection.statCards.contributionCadenceValue', {
+                  value: decimalFormatter.format(settings.contributionFrequency),
+                })}
               />
             </div>
             <div className="holdings-card">
-              <h4>Holdings snapshot</h4>
+              <h4>{t('projection.holdings.title')}</h4>
               <dl>
                 <div>
-                  <dt>Freedom24 EUR balance</dt>
+                  <dt>{t('projection.holdings.euroBalance')}</dt>
                   <dd>{currencyFormatter.format(settings.freedom24EuroBalance)}</dd>
                 </div>
                 <div>
-                  <dt>Freedom24 USD balance</dt>
+                  <dt>{t('projection.holdings.usdBalance')}</dt>
                   <dd>{usdCurrencyFormatter.format(settings.freedom24UsdBalance)}</dd>
                 </div>
                 <div>
-                  <dt>VUAA shares held</dt>
-                  <dd>{settings.vuaaShareCount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</dd>
+                  <dt>{t('projection.holdings.shareCount')}</dt>
+                  <dd>
+                    {settings.vuaaShareCount.toLocaleString(locale, {
+                      maximumFractionDigits: 2,
+                    })}
+                  </dd>
                 </div>
                 <div>
-                  <dt>Average purchase price</dt>
+                  <dt>{t('projection.holdings.purchasePrice')}</dt>
                   <dd>{detailedEuroFormatter.format(settings.vuaaPurchasePrice)}</dd>
                 </div>
                 <div>
-                  <dt>Last purchase date</dt>
-                  <dd>{formatHoldingsDate(settings.vuaaPurchaseDate)}</dd>
+                  <dt>{t('projection.holdings.purchaseDate')}</dt>
+                  <dd>{formatHoldingsDate(settings.vuaaPurchaseDate, locale)}</dd>
                 </div>
               </dl>
             </div>
@@ -424,13 +503,20 @@ function App() {
                 <XAxis
                   dataKey="year"
                   stroke="#9ca3af"
-                  tickFormatter={(value) => `Y${decimalFormatter.format(value)}`}
+                  tickFormatter={(value) => t('chart.year', { value: decimalFormatter.format(value) })}
                 />
                 <YAxis
                   stroke="#9ca3af"
                   tickFormatter={(value) => compactCurrencyFormatter.format(value)}
                 />
-                <Tooltip content={<ChartTooltip />} />
+                <Tooltip
+                  content={
+                    <ChartTooltip
+                      formatBalance={currencyFormatter.format}
+                      formatYear={decimalFormatter.format}
+                    />
+                  }
+                />
                 <Line
                   type="monotone"
                   dataKey="balance"
@@ -446,18 +532,18 @@ function App() {
 
       <section className="panel table-panel">
         <div className="panel-head">
-          <h2>Yearly breakdown</h2>
-          <span className="panel-meta">Includes contributions and growth separated</span>
+          <h2>{t('table.title')}</h2>
+          <span className="panel-meta">{t('table.description')}</span>
         </div>
 
         <div className="table-scroll">
           <table>
             <thead>
               <tr>
-                <th>Year</th>
-                <th>End balance</th>
-                <th>Total contributions</th>
-                <th>Growth / returns</th>
+                <th>{t('table.headers.year')}</th>
+                <th>{t('table.headers.endingBalance')}</th>
+                <th>{t('table.headers.contributions')}</th>
+                <th>{t('table.headers.growth')}</th>
               </tr>
             </thead>
             <tbody>{renderTable()}</tbody>
@@ -475,28 +561,38 @@ const StatCard = ({ label, value }: { label: string; value: string }) => (
   </div>
 )
 
+type StatusLabelKey = 'ready' | 'saving' | 'saved' | 'error'
+
 const StatusBadge = ({ state }: { state: SaveState }) => {
-  let label = 'Ready'
+  const { t } = useTranslation()
   let className = 'status ready'
+  let labelKey: StatusLabelKey = 'ready'
 
   if (state === 'saving') {
-    label = 'Saving…'
     className = 'status saving'
+    labelKey = 'saving'
   } else if (state === 'saved') {
-    label = 'Saved'
     className = 'status saved'
+    labelKey = 'saved'
   } else if (state === 'error') {
-    label = 'Retrying failed'
     className = 'status error'
+    labelKey = 'error'
   }
 
-  return <span className={className}>{label}</span>
+  return <span className={className}>{t(`status.${labelKey}`)}</span>
 }
 
 const ChartTooltip = ({
   active,
   payload,
-}: TooltipProps<number, string>) => {
+  formatBalance,
+  formatYear,
+}: TooltipProps<number, string> & {
+  formatBalance: (value: number) => string
+  formatYear: (value: number) => string
+}) => {
+  const { t } = useTranslation()
+
   if (!active || !payload || payload.length === 0) {
     return null
   }
@@ -505,8 +601,8 @@ const ChartTooltip = ({
 
   return (
     <div className="tooltip-card">
-      <span>Year {decimalFormatter.format(point.year)}</span>
-      <strong>{currencyFormatter.format(point.balance)}</strong>
+      <span>{t('chart.year', { value: formatYear(point.year) })}</span>
+      <strong>{formatBalance(point.balance)}</strong>
     </div>
   )
 }
