@@ -2,6 +2,12 @@
 
 Freedom24 + VUAA compound-interest dashboard built with React, TypeScript, Vite, and Electron.
 
+## Screenshots
+
+![Primary dashboard view showing inputs, waterfall stats, and growth chart](../docs/screenshots/dashboard-hero.png)
+
+![Table and formulas view highlighting yearly breakdown plus projection math](../docs/screenshots/table-formulas.png)
+
 ## Prerequisites
 
 - Node.js **20.19.0+** or **22.12.0+** (Vite 7 hard requirement). Using 20.16.x will trigger `Vite requires Node.js version 20.19+ or 22.12+` during `npm run build` / `npm run package`.

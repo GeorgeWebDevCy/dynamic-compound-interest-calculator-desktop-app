@@ -2,6 +2,12 @@
 
 Cross-platform Electron + React desktop experience that models compound interest scenarios with presets tuned for the Freedom24 custody account investing into Vanguard S&P 500 UCITS ETF (ticker: VUAA.EU). Every input change re-computes the growth curve, shows a chart/table breakdown, and persists the latest configuration to disk so you can continue where you left off.
 
+## Screenshots
+
+![Primary dashboard view showing inputs, waterfall stats, and growth chart](docs/screenshots/dashboard-hero.png)
+
+![Table and formulas view highlighting yearly breakdown plus projection math](docs/screenshots/table-formulas.png)
+
 ## Project layout
 
 ```
