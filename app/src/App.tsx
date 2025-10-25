@@ -27,6 +27,19 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 0,
 })
 
+const detailedEuroFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'EUR',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})
+
+const usdCurrencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
+})
+
 const compactCurrencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'EUR',
@@ -42,6 +55,49 @@ const percentFormatter = new Intl.NumberFormat('en-US', {
 const decimalFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 1,
 })
+
+type NumericSettingKey = {
+  [K in keyof CompoundSettings]: CompoundSettings[K] extends number ? K : never
+}[keyof CompoundSettings]
+
+type DateSettingKey = {
+  [K in keyof CompoundSettings]: CompoundSettings[K] extends string ? K : never
+}[keyof CompoundSettings]
+
+const normalizeDateValue = (value: string) => {
+  if (!value) {
+    return ''
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value
+  }
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) {
+    return ''
+  }
+
+  return parsed.toISOString().slice(0, 10)
+}
+
+const formatHoldingsDate = (value: string) => {
+  const normalized = normalizeDateValue(value)
+  if (!normalized) {
+    return '—'
+  }
+
+  const parsed = new Date(normalized)
+  if (Number.isNaN(parsed.getTime())) {
+    return '—'
+  }
+
+  return parsed.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
 
 function App() {
   const [settings, setSettings] = useState<CompoundSettings>(DEFAULT_SETTINGS)
@@ -88,18 +144,30 @@ function App() {
     [settings.annualReturn, expenseDrag],
   )
 
-  const updateField = (field: keyof CompoundSettings, value: number) => {
+  const updateField = <K extends keyof CompoundSettings>(
+    field: K,
+    value: CompoundSettings[K],
+  ) => {
     setSettings((prev) => ({
       ...prev,
-      [field]: Number.isFinite(value) ? value : prev[field],
+      [field]: value,
     }))
   }
 
-  const handleInputChange =
-    (field: keyof CompoundSettings) =>
+  const handleNumericInputChange =
+    (field: NumericSettingKey) =>
     (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      const value = Number(event.target.value)
-      updateField(field, Number.isNaN(value) ? 0 : value)
+      const nextValue = Number(event.target.value)
+      const sanitizedValue = Number.isNaN(nextValue) ? 0 : nextValue
+      updateField(field, sanitizedValue as CompoundSettings[NumericSettingKey])
+    }
+
+  const handleDateChange =
+    (field: DateSettingKey) =>
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value
+      const normalized = normalizeDateValue(value)
+      updateField(field, normalized as CompoundSettings[DateSettingKey])
     }
 
   const resetDefaults = () => {
@@ -150,7 +218,7 @@ function App() {
                 min={0}
                 step={100}
                 value={settings.principal}
-                onChange={handleInputChange('principal')}
+                onChange={handleNumericInputChange('principal')}
               />
             </label>
 
@@ -161,13 +229,16 @@ function App() {
                 min={0}
                 step={50}
                 value={settings.contribution}
-                onChange={handleInputChange('contribution')}
+                onChange={handleNumericInputChange('contribution')}
               />
             </label>
 
             <label>
               <span>Contribution cadence</span>
-              <select value={settings.contributionFrequency} onChange={handleInputChange('contributionFrequency')}>
+              <select
+                value={settings.contributionFrequency}
+                onChange={handleNumericInputChange('contributionFrequency')}
+              >
                 {CONTRIBUTION_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -178,7 +249,10 @@ function App() {
 
             <label>
               <span>Compounding frequency</span>
-              <select value={settings.compoundingFrequency} onChange={handleInputChange('compoundingFrequency')}>
+              <select
+                value={settings.compoundingFrequency}
+                onChange={handleNumericInputChange('compoundingFrequency')}
+              >
                 {COMPOUNDING_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -195,7 +269,7 @@ function App() {
                 max={40}
                 step={0.1}
                 value={settings.annualReturn}
-                onChange={handleInputChange('annualReturn')}
+                onChange={handleNumericInputChange('annualReturn')}
               />
             </label>
 
@@ -207,7 +281,7 @@ function App() {
                 max={60}
                 step={1}
                 value={settings.years}
-                onChange={handleInputChange('years')}
+                onChange={handleNumericInputChange('years')}
               />
             </label>
 
@@ -219,7 +293,7 @@ function App() {
                 max={2}
                 step={0.01}
                 value={settings.fundExpenseRatio}
-                onChange={handleInputChange('fundExpenseRatio')}
+                onChange={handleNumericInputChange('fundExpenseRatio')}
               />
             </label>
 
@@ -231,7 +305,60 @@ function App() {
                 max={5}
                 step={0.1}
                 value={settings.platformFee}
-                onChange={handleInputChange('platformFee')}
+                onChange={handleNumericInputChange('platformFee')}
+              />
+            </label>
+
+            <label>
+              <span>Freedom24 EUR balance</span>
+              <input
+                type="number"
+                min={0}
+                step={50}
+                value={settings.freedom24EuroBalance}
+                onChange={handleNumericInputChange('freedom24EuroBalance')}
+              />
+            </label>
+
+            <label>
+              <span>Freedom24 USD balance</span>
+              <input
+                type="number"
+                min={0}
+                step={50}
+                value={settings.freedom24UsdBalance}
+                onChange={handleNumericInputChange('freedom24UsdBalance')}
+              />
+            </label>
+
+            <label>
+              <span>VUAA shares held</span>
+              <input
+                type="number"
+                min={0}
+                step={0.01}
+                value={settings.vuaaShareCount}
+                onChange={handleNumericInputChange('vuaaShareCount')}
+              />
+            </label>
+
+            <label>
+              <span>Average purchase price (€)</span>
+              <input
+                type="number"
+                min={0}
+                step={0.01}
+                value={settings.vuaaPurchasePrice}
+                onChange={handleNumericInputChange('vuaaPurchasePrice')}
+              />
+            </label>
+
+            <label>
+              <span>Last purchase date</span>
+              <input
+                type="date"
+                value={normalizeDateValue(settings.vuaaPurchaseDate)}
+                onChange={handleDateChange('vuaaPurchaseDate')}
               />
             </label>
           </div>
@@ -262,6 +389,31 @@ function App() {
                 label="Contribution cadence"
                 value={`${settings.contributionFrequency}× per year`}
               />
+            </div>
+            <div className="holdings-card">
+              <h4>Holdings snapshot</h4>
+              <dl>
+                <div>
+                  <dt>Freedom24 EUR balance</dt>
+                  <dd>{currencyFormatter.format(settings.freedom24EuroBalance)}</dd>
+                </div>
+                <div>
+                  <dt>Freedom24 USD balance</dt>
+                  <dd>{usdCurrencyFormatter.format(settings.freedom24UsdBalance)}</dd>
+                </div>
+                <div>
+                  <dt>VUAA shares held</dt>
+                  <dd>{settings.vuaaShareCount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</dd>
+                </div>
+                <div>
+                  <dt>Average purchase price</dt>
+                  <dd>{detailedEuroFormatter.format(settings.vuaaPurchasePrice)}</dd>
+                </div>
+                <div>
+                  <dt>Last purchase date</dt>
+                  <dd>{formatHoldingsDate(settings.vuaaPurchaseDate)}</dd>
+                </div>
+              </dl>
             </div>
           </div>
 
