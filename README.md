@@ -57,7 +57,7 @@ Run the following from the `app/` directory:
 
 | Platform | Command | Artifacts | Notes |
 | --- | --- | --- | --- |
-| Windows (NSIS + MSI) | `npm run package -- --win` | `Dynamic Compound Interest-1.0.0.exe` and `.msi` in `app/dist/` | Run on Windows with Developer Mode or elevated privileges so electron-builder can create symlinks during codesign bootstrap. Uses `build/icons/icon.ico`. |
+| Windows (NSIS + MSI) | `npm run package -- --win` | `Dynamic Compound Interest-<version>.exe` and `.msi` in `app/dist/` | Run on Windows with Developer Mode or elevated privileges so electron-builder can create symlinks during codesign bootstrap. Uses `build/icons/icon.ico`. |
 | macOS (DMG) | `npm run package -- --mac` | Signed/unsigned `.dmg` in `app/dist/` | Must run on macOS; notarization requires an Apple Developer ID and associated environment variables. |
 | Linux (AppImage) | `npm run package -- --linux` | `.AppImage` in `app/dist/` | Must run on a Linux host (electron-builder cannot produce AppImage on Windows without WSL). Requires `fuse`/`libappimage` available. |
 
@@ -83,6 +83,12 @@ The most recent inputs are cached in `dynamic-compound-config.json` inside Elect
 
 Delete that file to return to the built-in Freedom24 + VUAA defaults, or use the in-app reset.
 
-## Commiting the scaffold
+## Release process
 
-Once you are done reviewing/adjusting the generated project under `app/`, run the usual `git add`, `git commit`, and `git push` commands from the repository root to capture the scaffolding snapshot.
+Follow these steps when preparing the GitHub release for v1.0.0 (adapt as needed for future tags):
+
+1. **Verify quality**: run `npm run lint`, `npm run test`, and `npm run build` from `app/` to ensure the renderer, Electron processes, and shared helpers are healthy.
+2. **Update versioning**: bump the semver in `app/package.json` (which also updates `package-lock.json`) and note the change in the release notes draft.
+3. **Package installers**: execute the platform-specific `npm run package` commands above on Windows, macOS, and Linux hosts; collect the installers from `app/dist/`.
+4. **Draft release notes**: summarize highlights, link to any key issues, and list checksums for each installer.
+5. **Publish on GitHub**: create the `v1.0.0` tag, upload the installers as assets, paste the notes, and double-check download links before publishing.
