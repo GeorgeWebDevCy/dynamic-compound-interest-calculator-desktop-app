@@ -1,10 +1,22 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  formatDateForInput,
   formatHoldingsDate,
   getWholeMonthsUntilYearEnd,
   isPurchaseDateInFuture,
+  normalizeDateValue,
 } from './dates'
+
+describe('normalizeDateValue', () => {
+  it('parses dd/mm/yyyy input into ISO format', () => {
+    expect(normalizeDateValue('05/03/2024')).toBe('2024-03-05')
+  })
+
+  it('returns an empty string for incomplete dates', () => {
+    expect(normalizeDateValue('05/03/24')).toBe('')
+  })
+})
 
 describe('getWholeMonthsUntilYearEnd', () => {
   it('returns remaining months when the purchase happened earlier this year', () => {
@@ -44,5 +56,15 @@ describe('formatHoldingsDate', () => {
   it('returns em dash for invalid inputs', () => {
     expect(formatHoldingsDate('')).toBe('—')
     expect(formatHoldingsDate('not-a-date')).toBe('—')
+  })
+})
+
+describe('formatDateForInput', () => {
+  it('returns dd/mm/yyyy for a valid ISO string', () => {
+    expect(formatDateForInput('2024-12-31')).toBe('31/12/2024')
+  })
+
+  it('returns an empty string for invalid values', () => {
+    expect(formatDateForInput('')).toBe('')
   })
 })

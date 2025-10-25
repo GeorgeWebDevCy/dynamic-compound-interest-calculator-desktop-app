@@ -1,7 +1,12 @@
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+const SLASH_DATE_PATTERN = /^\d{2}\/\d{2}\/\d{4}$/
 
 export const normalizeDateValue = (value: string) => {
   if (!value) {
+    return ''
+  }
+
+  if (value.includes('/') && !SLASH_DATE_PATTERN.test(value)) {
     return ''
   }
 
@@ -9,12 +14,45 @@ export const normalizeDateValue = (value: string) => {
     return value
   }
 
+  if (SLASH_DATE_PATTERN.test(value)) {
+    const [day, month, year] = value.split('/').map(Number)
+    const isoFromSlash = buildIsoFromParts(year, month, day)
+    if (isoFromSlash) {
+      return isoFromSlash
+    }
+  }
+
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) {
     return ''
   }
 
-  return parsed.toISOString().slice(0, 10)
+  return toIsoDateString(parsed)
+}
+
+const toIsoDateString = (date: Date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const buildIsoFromParts = (year: number, month: number, day: number) => {
+  if (!year || !month || !day) {
+    return ''
+  }
+
+  const parsed = new Date(year, month - 1, day)
+  if (
+    Number.isNaN(parsed.getTime()) ||
+    parsed.getFullYear() !== year ||
+    parsed.getMonth() !== month - 1 ||
+    parsed.getDate() !== day
+  ) {
+    return ''
+  }
+
+  return toIsoDateString(parsed)
 }
 
 const parseNormalizedDate = (value: string): Date | null => {
@@ -32,6 +70,23 @@ const parseNormalizedDate = (value: string): Date | null => {
   return parsed
 }
 
+const formatDayMonthYear = (value: Date, separator = '/') => {
+  const day = String(value.getDate()).padStart(2, '0')
+  const month = String(value.getMonth() + 1).padStart(2, '0')
+  const year = value.getFullYear()
+  return `${day}${separator}${month}${separator}${year}`
+}
+
+export const formatDateForInput = (value: string) => {
+  const normalized = normalizeDateValue(value)
+  const parsed = parseNormalizedDate(normalized)
+  if (!parsed) {
+    return ''
+  }
+
+  return formatDayMonthYear(parsed)
+}
+
 export const formatHoldingsDate = (value: string, _locale?: string) => {
   const normalized = normalizeDateValue(value)
   const parsed = parseNormalizedDate(normalized)
@@ -40,12 +95,7 @@ export const formatHoldingsDate = (value: string, _locale?: string) => {
     return '—'
   }
 
-  const day = String(parsed.getDate()).padStart(2, '0')
-  const month = String(parsed.getMonth() + 1).padStart(2, '0')
-  const year = parsed.getFullYear()
-
-  const separator = '/'
-  return `${day}${separator}${month}${separator}${year}`
+  return formatDayMonthYear(parsed)
 }
 
 export const isPurchaseDateInFuture = (

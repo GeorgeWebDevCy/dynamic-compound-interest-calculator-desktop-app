@@ -13,6 +13,7 @@ import {
 } from 'recharts'
 import './App.css'
 import {
+  formatDateForInput,
   formatHoldingsDate,
   getWholeMonthsUntilYearEnd,
   isPurchaseDateInFuture,
@@ -59,6 +60,10 @@ function App() {
   const [settings, setSettings] = useState<CompoundSettings>(DEFAULT_SETTINGS)
   const [loading, setLoading] = useState(true)
   const [saveState, setSaveState] = useState<SaveState>('idle')
+  const [purchaseDateInput, setPurchaseDateInput] = useState(
+    () => formatDateForInput(DEFAULT_SETTINGS.vuaaPurchaseDate) || '',
+  )
+  const [isEditingPurchaseDate, setIsEditingPurchaseDate] = useState(false)
 
   const currencyFormatter = useMemo(
     () =>
@@ -160,6 +165,14 @@ function App() {
     return () => window.clearTimeout(debounce)
   }, [settings, loading])
 
+  useEffect(() => {
+    if (isEditingPurchaseDate) {
+      return
+    }
+
+    setPurchaseDateInput(formatDateForInput(settings.vuaaPurchaseDate) || '')
+  }, [settings.vuaaPurchaseDate, isEditingPurchaseDate])
+
   const remainingContributionMonths = useMemo(
     () => getWholeMonthsUntilYearEnd(settings.vuaaPurchaseDate),
     [settings.vuaaPurchaseDate],
@@ -214,13 +227,39 @@ function App() {
       updateField(field, sanitizedValue as CompoundSettings[NumericSettingKey])
     }
 
-  const handleDateChange =
-    (field: DateSettingKey) =>
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const value = event.target.value
-      const normalized = normalizeDateValue(value)
-      updateField(field, normalized as CompoundSettings[DateSettingKey])
+  const handlePurchaseDateChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const rawValue = event.target.value
+    setPurchaseDateInput(rawValue)
+
+    if (rawValue.trim() === '') {
+      updateField('vuaaPurchaseDate', '' as CompoundSettings[DateSettingKey])
+      return
     }
+
+    const normalized = normalizeDateValue(rawValue)
+    if (normalized) {
+      updateField('vuaaPurchaseDate', normalized as CompoundSettings[DateSettingKey])
+    }
+  }
+
+  const handlePurchaseDateBlur = () => {
+    setIsEditingPurchaseDate(false)
+
+    if (purchaseDateInput.trim() === '') {
+      updateField('vuaaPurchaseDate', '' as CompoundSettings[DateSettingKey])
+      return
+    }
+
+    const normalized = normalizeDateValue(purchaseDateInput)
+    if (normalized) {
+      updateField('vuaaPurchaseDate', normalized as CompoundSettings[DateSettingKey])
+      setPurchaseDateInput(formatDateForInput(normalized) || '')
+    } else {
+      setPurchaseDateInput(formatDateForInput(settings.vuaaPurchaseDate) || '')
+    }
+  }
+
+  const handlePurchaseDateFocus = () => setIsEditingPurchaseDate(true)
 
   const handleLanguageChange = (event: ChangeEvent<HTMLSelectElement>) => {
     void i18n.changeLanguage(event.target.value)
@@ -404,10 +443,14 @@ function App() {
             <label>
               <span>{t('inputs.purchaseDate.label')}</span>
               <input
-                type="date"
-                lang={locale}
-                value={normalizeDateValue(settings.vuaaPurchaseDate)}
-                onChange={handleDateChange('vuaaPurchaseDate')}
+                type="text"
+                inputMode="numeric"
+                pattern="\\d{2}/\\d{2}/\\d{4}"
+                placeholder="dd/mm/yyyy"
+                value={purchaseDateInput}
+                onChange={handlePurchaseDateChange}
+                onBlur={handlePurchaseDateBlur}
+                onFocus={handlePurchaseDateFocus}
               />
               <span className="input-hint">
                 {purchaseDateInFuture
