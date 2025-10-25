@@ -55,11 +55,11 @@ The command launches the Vite dev server plus an Electron window that hot-reload
 
 Run the following from the `app/` directory:
 
-| Target | Command | Output |
-| --- | --- | --- |
-| Windows installer | `npm run package -- --win` | `.exe`/`.msi` under `app/dist/` |
-| macOS DMG | `npm run package -- --mac` | `.dmg` under `app/dist/` |
-| Linux AppImage | `npm run package -- --linux` | `.AppImage` under `app/dist/` |
+| Platform | Command | Artifacts | Notes |
+| --- | --- | --- | --- |
+| Windows (NSIS + MSI) | `npm run package -- --win` | `Dynamic Compound Interest-0.1.0.exe` and `.msi` in `app/dist/` | Run on Windows with Developer Mode or elevated privileges so electron-builder can create symlinks during codesign bootstrap. Uses `build/icons/icon.ico`. |
+| macOS (DMG) | `npm run package -- --mac` | Signed/unsigned `.dmg` in `app/dist/` | Must run on macOS; notarization requires an Apple Developer ID and associated environment variables. |
+| Linux (AppImage) | `npm run package -- --linux` | `.AppImage` in `app/dist/` | Must run on a Linux host (electron-builder cannot produce AppImage on Windows without WSL). Requires `fuse`/`libappimage` available. |
 
 Electron Builder detects the host OS automatically. Cross-packaging (e.g., building a macOS binary on Windows) requires the respective platform tooling or CI matrix.
 

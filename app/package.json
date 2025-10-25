@@ -52,6 +52,23 @@
       "electron/**/*",
       "src/shared/**/*",
       "package.json"
-    ]
+    ],
+    "directories": {
+      "buildResources": "build"
+    },
+    "win": {
+      "icon": "build/icons/icon.ico",
+      "target": [
+        "nsis",
+        "msi"
+      ]
+    },
+    "linux": {
+      "icon": "build/icons/icon.png",
+      "target": [
+        "AppImage"
+      ],
+      "category": "Finance"
+    }
   }
 }
