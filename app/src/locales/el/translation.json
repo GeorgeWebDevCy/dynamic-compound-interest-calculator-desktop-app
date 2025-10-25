@@ -74,6 +74,43 @@
       "shareCount": "Μετοχές VUAA",
       "purchasePrice": "Μέση τιμή αγοράς",
       "purchaseDate": "Ημερομηνία τελευταίας αγοράς"
+    },
+    "formulas": {
+      "title": "Ανάλυση τύπων",
+      "description": "Η προβολή χρησιμοποιεί τις τρέχουσες εισόδους στους παρακάτω τύπους.",
+      "netRate": {
+        "title": "Καθαρή ετήσια απόδοση",
+        "equation": "rₙₑₜ = (1 + r_gross) × (1 - expenses) − 1",
+        "result": "rₙₑₜ = {{value}}"
+      },
+      "periodicRate": {
+        "title": "Περιοδικός συντελεστής ανατοκισμού",
+        "equation": "r_periodic = (1 + rₙₑₜ)^(1 ÷ n) − 1",
+        "result": "r_periodic = {{value}}",
+        "compoundingValue": "{{value}}× ανά έτος"
+      },
+      "contribution": {
+        "title": "Κατάθεση ανά περίοδο",
+        "equation": "C_period = contribution × (frequency ÷ n)",
+        "result": "C_period = {{value}}",
+        "frequencyValue": "{{value}}× ανά έτος"
+      },
+      "firstYear": {
+        "title": "Βαρύτητα καταθέσεων πρώτου έτους",
+        "equation": "C_first = C_period × (months_remaining ÷ 12)",
+        "result": "C_first = {{value}} (συντελεστής {{factor}}×)"
+      },
+      "labels": {
+        "grossReturn": "Μικτή απόδοση (r_gross)",
+        "expenseDrag": "Επιβάρυνση εξόδων",
+        "netReturn": "Καθαρή ετήσια απόδοση (rₙₑₜ)",
+        "compounding": "Περίοδοι ανατοκισμού (n)",
+        "contribution": "Κατάθεση",
+        "contributionFrequency": "Συχνότητα καταθέσεων",
+        "firstYearFactor": "Συντελεστής πρώτου έτους",
+        "firstYearContribution": "Ποσό ανά περίοδο στο πρώτο έτος",
+        "monthsRemaining": "Υπόλοιποι μήνες"
+      }
     }
   },
   "chart": {

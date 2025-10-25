@@ -119,6 +119,15 @@ function App() {
     [locale],
   )
 
+  const factorFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(locale, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+    [locale],
+  )
+
   useEffect(() => {
     if (!window.configAPI) {
       setLoading(false)
@@ -172,6 +181,21 @@ function App() {
     [settings.annualReturn, expenseDrag],
   )
   const currentYear = new Date().getFullYear()
+
+  const compoundingPeriods = Math.max(settings.compoundingFrequency, 1)
+  const grossReturnRate = settings.annualReturn / 100
+  const expenseRate = expenseDrag / 100
+  const growthFactor = Math.max(1 + netAnnualRate, 0.0001)
+  const periodicRate = Math.pow(growthFactor, 1 / compoundingPeriods) - 1
+  const contributionPerPeriod =
+    settings.contribution * (settings.contributionFrequency / compoundingPeriods)
+  const normalizedContributionMonths = Math.min(
+    Math.max(remainingContributionMonths, 0),
+    12,
+  )
+  const firstYearContributionFactor = normalizedContributionMonths / 12
+  const firstYearContributionPerPeriod =
+    contributionPerPeriod * firstYearContributionFactor
 
   const updateField = <K extends keyof CompoundSettings>(
     field: K,
@@ -488,6 +512,95 @@ function App() {
                 </div>
               </dl>
             </div>
+            <div className="formula-card">
+              <h4>{t('projection.formulas.title')}</h4>
+              <p className="muted">{t('projection.formulas.description')}</p>
+              <div className="formula-grid">
+                <FormulaBlock
+                  title={t('projection.formulas.netRate.title')}
+                  equation={t('projection.formulas.netRate.equation')}
+                  result={t('projection.formulas.netRate.result', {
+                    value: percentFormatter.format(netAnnualRate),
+                  })}
+                  items={[
+                    {
+                      label: t('projection.formulas.labels.grossReturn'),
+                      value: percentFormatter.format(grossReturnRate),
+                    },
+                    {
+                      label: t('projection.formulas.labels.expenseDrag'),
+                      value: percentFormatter.format(expenseRate),
+                    },
+                  ]}
+                />
+                <FormulaBlock
+                  title={t('projection.formulas.periodicRate.title')}
+                  equation={t('projection.formulas.periodicRate.equation')}
+                  result={t('projection.formulas.periodicRate.result', {
+                    value: percentFormatter.format(periodicRate),
+                  })}
+                  items={[
+                    {
+                      label: t('projection.formulas.labels.netReturn'),
+                      value: percentFormatter.format(netAnnualRate),
+                    },
+                    {
+                      label: t('projection.formulas.labels.compounding'),
+                      value: t('projection.formulas.periodicRate.compoundingValue', {
+                        value: decimalFormatter.format(compoundingPeriods),
+                      }),
+                    },
+                  ]}
+                />
+                <FormulaBlock
+                  title={t('projection.formulas.contribution.title')}
+                  equation={t('projection.formulas.contribution.equation')}
+                  result={t('projection.formulas.contribution.result', {
+                    value: detailedEuroFormatter.format(contributionPerPeriod),
+                  })}
+                  items={[
+                    {
+                      label: t('projection.formulas.labels.contribution'),
+                      value: detailedEuroFormatter.format(settings.contribution),
+                    },
+                    {
+                      label: t('projection.formulas.labels.contributionFrequency'),
+                      value: t('projection.formulas.contribution.frequencyValue', {
+                        value: decimalFormatter.format(settings.contributionFrequency),
+                      }),
+                    },
+                    {
+                      label: t('projection.formulas.labels.compounding'),
+                      value: t('projection.formulas.periodicRate.compoundingValue', {
+                        value: decimalFormatter.format(compoundingPeriods),
+                      }),
+                    },
+                  ]}
+                />
+                <FormulaBlock
+                  title={t('projection.formulas.firstYear.title')}
+                  equation={t('projection.formulas.firstYear.equation')}
+                  result={t('projection.formulas.firstYear.result', {
+                    value: detailedEuroFormatter.format(firstYearContributionPerPeriod),
+                    factor: factorFormatter.format(firstYearContributionFactor),
+                  })}
+                  items={[
+                    {
+                      label: t('projection.formulas.labels.monthsRemaining'),
+                      value: decimalFormatter.format(normalizedContributionMonths),
+                    },
+                    {
+                      label: t('projection.formulas.labels.firstYearFactor'),
+                      value: factorFormatter.format(firstYearContributionFactor),
+                    },
+                    {
+                      label: t('projection.formulas.labels.firstYearContribution'),
+                      value: detailedEuroFormatter.format(firstYearContributionPerPeriod),
+                    },
+                  ]}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="chart-wrapper">
@@ -558,6 +671,37 @@ const StatCard = ({ label, value }: { label: string; value: string }) => (
   <div className="stat-card">
     <span className="muted">{label}</span>
     <strong>{value}</strong>
+  </div>
+)
+
+type FormulaItem = {
+  label: string
+  value: string
+}
+
+const FormulaBlock = ({
+  title,
+  equation,
+  result,
+  items,
+}: {
+  title: string
+  equation: string
+  result: string
+  items: FormulaItem[]
+}) => (
+  <div className="formula-block">
+    <span className="muted formula-block-title">{title}</span>
+    <code className="formula-equation">{equation}</code>
+    <strong className="formula-result">{result}</strong>
+    <div className="formula-values">
+      {items.map((item) => (
+        <div key={item.label} className="formula-value">
+          <span className="formula-value-label">{item.label}</span>
+          <span className="formula-value-output">{item.value}</span>
+        </div>
+      ))}
+    </div>
   </div>
 )
 

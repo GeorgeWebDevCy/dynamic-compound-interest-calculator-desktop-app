@@ -74,6 +74,43 @@
       "shareCount": "VUAA shares held",
       "purchasePrice": "Average purchase price",
       "purchaseDate": "Last purchase date"
+    },
+    "formulas": {
+      "title": "Formula breakdown",
+      "description": "The projection uses the current inputs in the equations below.",
+      "netRate": {
+        "title": "Net annual rate",
+        "equation": "rₙₑₜ = (1 + r_gross) × (1 - expenses) − 1",
+        "result": "rₙₑₜ = {{value}}"
+      },
+      "periodicRate": {
+        "title": "Periodic compounding rate",
+        "equation": "r_periodic = (1 + rₙₑₜ)^(1 ÷ n) − 1",
+        "result": "r_periodic = {{value}}",
+        "compoundingValue": "{{value}}× per year"
+      },
+      "contribution": {
+        "title": "Contribution per period",
+        "equation": "C_period = contribution × (frequency ÷ n)",
+        "result": "C_period = {{value}}",
+        "frequencyValue": "{{value}}× per year"
+      },
+      "firstYear": {
+        "title": "First-year contribution weight",
+        "equation": "C_first = C_period × (months_remaining ÷ 12)",
+        "result": "C_first = {{value}} (factor {{factor}}×)"
+      },
+      "labels": {
+        "grossReturn": "Gross return (r_gross)",
+        "expenseDrag": "Expense drag",
+        "netReturn": "Net annual rate (rₙₑₜ)",
+        "compounding": "Compounding periods (n)",
+        "contribution": "Contribution",
+        "contributionFrequency": "Contribution cadence",
+        "firstYearFactor": "First-year factor",
+        "firstYearContribution": "First-year per-period amount",
+        "monthsRemaining": "Months remaining"
+      }
     }
   },
   "chart": {
