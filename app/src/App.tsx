@@ -53,6 +53,8 @@ const resolveLanguageCode = (language?: string) => {
 
 const resolveLocale = (language: string) => (language === 'el' ? 'el-GR' : 'en-GB')
 
+const WITHDRAWAL_TOOLTIP_LIMIT = 5
+
 function App() {
   const { t, i18n } = useTranslation()
   const languageCode = resolveLanguageCode(i18n.resolvedLanguage ?? i18n.language)
@@ -271,29 +273,65 @@ function App() {
     setSettings({ ...DEFAULT_SETTINGS })
   }
 
-  const formatWithdrawalDate = (yearValue: number) => {
+  const getWithdrawalDate = (yearValue: number) => {
     const payoutYear = Math.max(currentYear - 1 + Math.ceil(yearValue), currentYear)
     const iso = `${payoutYear}-12-31`
-    return formatDateForInput(iso) || `31/12/${payoutYear}`
+    return {
+      iso,
+      label: formatDateForInput(iso) || `31/12/${payoutYear}`,
+    }
   }
 
+  const withdrawalScheduleSummary = useMemo(() => {
+    if (!projection.table.length) {
+      return ''
+    }
+
+    const entries = projection.table.slice(0, WITHDRAWAL_TOOLTIP_LIMIT).map((row) => {
+      const withdrawalDate = getWithdrawalDate(row.year)
+      return t('table.withdrawalScheduleTooltip', {
+        year: decimalFormatter.format(row.year),
+        amount: currencyFormatter.format(row.allowedWithdrawal),
+        date: withdrawalDate.label,
+      })
+    })
+
+    if (projection.table.length > WITHDRAWAL_TOOLTIP_LIMIT) {
+      entries.push(
+        t('table.withdrawalScheduleMore', {
+          count: projection.table.length - WITHDRAWAL_TOOLTIP_LIMIT,
+        }),
+      )
+    }
+
+    return entries.join('\n')
+  }, [projection.table, t, decimalFormatter, currencyFormatter])
+
+  const withdrawalScheduleAriaLabel = withdrawalScheduleSummary
+    ? `${t('table.withdrawalScheduleLabel')}: ${withdrawalScheduleSummary.replace(/\n/g, ', ')}`
+    : undefined
+
   const renderTable = () =>
-    projection.table.map((row) => (
-      <tr key={row.year}>
-        <td>{t('table.yearValue', { value: decimalFormatter.format(row.year) })}</td>
-        <td>{currencyFormatter.format(row.endingBalance)}</td>
+    projection.table.map((row) => {
+      const withdrawalDate = getWithdrawalDate(row.year)
+      return (
+        <tr key={row.year}>
+          <td>{t('table.yearValue', { value: decimalFormatter.format(row.year) })}</td>
+          <td>{currencyFormatter.format(row.endingBalance)}</td>
         <td>{currencyFormatter.format(row.contributions)}</td>
         <td>{currencyFormatter.format(row.growth)}</td>
         <td>
           <div className="withdrawal-cell">
             <strong>{currencyFormatter.format(row.allowedWithdrawal)}</strong>
-            <span className="muted">
-              {t('table.withdrawalDetail', { date: formatWithdrawalDate(row.year) })}
+            <span className="muted withdrawal-detail">
+              {t('table.withdrawalDetailLabel')}{' '}
+              <time dateTime={withdrawalDate.iso}>{withdrawalDate.label}</time>
             </span>
           </div>
         </td>
       </tr>
-    ))
+      )
+    })
 
   return (
     <div className="app-shell">
@@ -606,7 +644,21 @@ function App() {
                 <th>{t('table.headers.endingBalance')}</th>
                 <th>{t('table.headers.contributions')}</th>
                 <th>{t('table.headers.growth')}</th>
-                <th>{t('table.headers.withdrawal')}</th>
+                <th className="withdrawal-header">
+                  <span>
+                    {t('table.headers.withdrawal')}
+                    {withdrawalScheduleSummary && (
+                      <button
+                        type="button"
+                        className="info-badge"
+                        title={withdrawalScheduleSummary}
+                        aria-label={withdrawalScheduleAriaLabel}
+                      >
+                        i
+                      </button>
+                    )}
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody>{renderTable()}</tbody>

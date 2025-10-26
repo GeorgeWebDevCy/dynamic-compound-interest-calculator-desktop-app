@@ -354,6 +354,18 @@
   font-size: 1.05rem;
 }
 
+.withdrawal-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.withdrawal-detail time {
+  font-variant-numeric: tabular-nums;
+  color: #f3f4f6;
+}
+
 .chart-wrapper {
   margin-top: 1rem;
   width: 100%;
@@ -427,6 +439,40 @@ th {
   letter-spacing: 0.08em;
   color: #9ba7bf;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.withdrawal-header > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.info-badge {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: #e5e7eb;
+  border-radius: 999px;
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.75rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.info-badge:hover,
+.info-badge:focus-visible {
+  border-color: rgba(34, 211, 136, 0.7);
+  color: #22d3a6;
+}
+
+.info-badge:focus-visible {
+  outline: 2px solid rgba(34, 211, 136, 0.6);
+  outline-offset: 2px;
 }
 
 tbody tr {

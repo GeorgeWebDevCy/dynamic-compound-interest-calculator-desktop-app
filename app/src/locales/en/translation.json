@@ -123,7 +123,10 @@
       "withdrawal": "Allowed withdrawal (4%)"
     },
     "yearValue": "Year {{value}}",
-    "withdrawalDetail": "Available after {{date}}"
+    "withdrawalDetailLabel": "Available after",
+    "withdrawalScheduleLabel": "Withdrawal schedule",
+    "withdrawalScheduleTooltip": "Year {{year}} → {{amount}} on {{date}}",
+    "withdrawalScheduleMore": "+{{count}} more years"
   },
   "status": {
     "ready": "Ready",
