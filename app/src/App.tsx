@@ -7,6 +7,7 @@ import {
   Legend,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -72,6 +73,7 @@ const FALLBACK_SETTINGS: CompoundSettings =
     years: 1,
     fundExpenseRatio: 0,
     platformFee: 0,
+    targetBalance: 0,
     vuaaShareCount: 0,
     vuaaPurchasePrice: 0,
     vuaaPurchaseDate: '',
@@ -302,6 +304,27 @@ function App() {
   const activeProjection =
     activeAnalysis?.projection ??
     buildProjection(activeSettings, { remainingContributionMonths })
+
+  const milestoneMap = useMemo(() => {
+    const milestones = new Map<string, { year: number; value: number; target: number }>()
+
+    scenarioAnalyses.forEach(({ scenario, projection }) => {
+      const target = Math.max(scenario.settings.targetBalance, 0)
+      if (!target) {
+        return
+      }
+
+      const match = projection.table.find((row) => row.endingBalance >= target)
+      if (match) {
+        milestones.set(scenario.id, { year: match.year, value: match.endingBalance, target })
+      }
+    })
+
+    return milestones
+  }, [scenarioAnalyses])
+
+  const activeMilestone =
+    (activeScenario?.id ? milestoneMap.get(activeScenario.id) : undefined) ?? null
 
   const purchaseDateInFuture = useMemo(
     () => isPurchaseDateInFuture(activeSettings.vuaaPurchaseDate),
@@ -795,6 +818,17 @@ function App() {
             </label>
 
             <label>
+              <span>{t('inputs.targetBalance')}</span>
+              <input
+                type="number"
+                min={0}
+                step={1000}
+                value={activeSettings.targetBalance}
+                onChange={handleNumericInputChange('targetBalance')}
+              />
+            </label>
+
+            <label>
               <span>{t('inputs.shareCount')}</span>
               <input
                 type="number"
@@ -864,6 +898,35 @@ function App() {
                 })}
               </p>
             </div>
+            {activeSettings.targetBalance > 0 && (
+              <div className="goal-card">
+                <p className="eyebrow">{t('projection.goal.eyebrow')}</p>
+                {activeMilestone ? (
+                  <>
+                    <h4>
+                      {t('projection.goal.metTitle', {
+                        value: currencyFormatter.format(activeSettings.targetBalance),
+                      })}
+                    </h4>
+                    <p className="muted">
+                      {t('projection.goal.metSummary', {
+                        year: decimalFormatter.format(activeMilestone.year),
+                        balance: currencyFormatter.format(activeMilestone.value),
+                      })}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h4>{t('projection.goal.unmetTitle')}</h4>
+                    <p className="muted">
+                      {t('projection.goal.unmetSummary', {
+                        value: currencyFormatter.format(activeSettings.targetBalance),
+                      })}
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
             <div className="stat-grid">
               <StatCard
                 label={t('projection.statCards.totalContributions')}
@@ -931,6 +994,7 @@ function App() {
                     <ChartTooltip
                       formatBalance={currencyFormatter.format}
                       formatYear={decimalFormatter.format}
+                      milestones={milestoneMap}
                     />
                   }
                 />
@@ -947,6 +1011,19 @@ function App() {
                     activeDot={{ r: 4 }}
                   />
                 ))}
+                {activeSettings.targetBalance > 0 && (
+                  <ReferenceLine
+                    y={activeSettings.targetBalance}
+                    stroke="#facc15"
+                    strokeDasharray="6 6"
+                    label={{
+                      value: t('chart.goalLineLabel'),
+                      fill: '#facc15',
+                      fontSize: 12,
+                      position: 'right',
+                    }}
+                  />
+                )}
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -1181,9 +1258,11 @@ const ChartTooltip = ({
   label,
   formatBalance,
   formatYear,
+  milestones,
 }: TooltipProps<number, string> & {
   formatBalance: (value: number) => string
   formatYear: (value: number) => string
+  milestones: Map<string, { year: number; value: number; target: number }>
 }) => {
   const { t } = useTranslation()
 
@@ -1220,8 +1299,30 @@ const ChartTooltip = ({
               className="tooltip-color"
               style={{ backgroundColor: entry.color ?? FALLBACK_COLOR }}
             />
-            <span className="tooltip-name">{entry.name}</span>
-            <span className="tooltip-value">{formatBalance(entry.value as number)}</span>
+            <div className="tooltip-series-content">
+              <div className="tooltip-series-row">
+                <span className="tooltip-name">{entry.name}</span>
+                <span className="tooltip-value">{formatBalance(entry.value as number)}</span>
+              </div>
+              {(() => {
+                const dataKey = String(entry.dataKey ?? '')
+                const milestone = milestones.get(dataKey)
+                const milestoneReached =
+                  milestone && Math.abs(resolvedYear - milestone.year) < 0.01
+
+                if (!milestoneReached) {
+                  return null
+                }
+
+                return (
+                  <span className="tooltip-note">
+                    {t('chart.tooltip.goalReached', {
+                      value: formatBalance(milestone.target),
+                    })}
+                  </span>
+                )
+              })()}
+            </div>
           </li>
         ))}
       </ul>

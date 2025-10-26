@@ -30,6 +30,7 @@ const FALLBACK_SCENARIO =
       years: 1,
       fundExpenseRatio: 0,
       platformFee: 0,
+      targetBalance: 0,
       vuaaShareCount: 0,
       vuaaPurchasePrice: 0,
       vuaaPurchaseDate: '',
@@ -138,6 +139,9 @@ function normalizeScenario(candidate, index, usedColors) {
   } else {
     usedColors.add(normalized.color)
   }
+
+  const target = Number(normalized.settings.targetBalance)
+  normalized.settings.targetBalance = Number.isFinite(target) ? target : 0
 
   return normalized
 }

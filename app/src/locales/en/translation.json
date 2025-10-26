@@ -21,6 +21,7 @@
     "duration": "Investment duration (years)",
     "expenseRatio": "ETF expense ratio (VUAA \u2014 0.07%)",
     "platformFee": "Platform fee (Freedom24 custody %)",
+    "targetBalance": "Target balance (\u20ac)",
     "shareCount": "VUAA shares held",
     "purchasePrice": "Average purchase price (\u20ac)",
     "purchaseDate": {
@@ -65,6 +66,13 @@
     "projectedBalance": {
       "eyebrow": "Projected balance",
       "summary": "Over {{years}} years assuming {{grossReturn}} gross return and {{expenseDrag}} expenses."
+    },
+    "goal": {
+      "eyebrow": "Target milestone",
+      "metTitle": "Target of {{value}} reached",
+      "metSummary": "Year {{year}} projects an ending balance of {{balance}}.",
+      "unmetTitle": "Target not reached",
+      "unmetSummary": "Projection never meets the {{value}} goal within the selected duration."
     },
     "statCards": {
       "totalContributions": "Total contributions",
@@ -119,7 +127,11 @@
     }
   },
   "chart": {
-    "year": "Year {{value}}"
+    "year": "Year {{value}}",
+    "goalLineLabel": "Target",
+    "tooltip": {
+      "goalReached": "Goal reached ({{value}})"
+    }
   },
   "table": {
     "title": "Yearly breakdown",

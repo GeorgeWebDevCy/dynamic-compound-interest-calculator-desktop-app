@@ -298,6 +298,21 @@
   gap: 0.75rem;
 }
 
+.goal-card {
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  border-radius: 1rem;
+  background: rgba(250, 204, 21, 0.08);
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.goal-card h4 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
 .holdings-card h4 {
   margin: 0;
   font-size: 1.1rem;
@@ -523,6 +538,20 @@
   gap: 0.5rem;
 }
 
+.tooltip-series-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.tooltip-series-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 .tooltip-color {
   width: 0.65rem;
   height: 0.65rem;
@@ -537,6 +566,13 @@
 
 .tooltip-value {
   font-variant-numeric: tabular-nums;
+}
+
+.tooltip-note {
+  font-size: 0.75rem;
+  color: #facc15;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .table-panel {
