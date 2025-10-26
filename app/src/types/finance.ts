@@ -9,6 +9,7 @@ export type CompoundSettings = {
   years: number
   fundExpenseRatio: number
   platformFee: number
+  targetBalance: number
   vuaaShareCount: number
   vuaaPurchasePrice: number
   vuaaPurchaseDate: string
