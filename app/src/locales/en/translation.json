@@ -124,6 +124,10 @@
   "table": {
     "title": "Yearly breakdown",
     "description": "Includes contributions and growth separated",
+    "actions": {
+      "exportCsv": "Export CSV",
+      "exportXlsx": "Export XLSX"
+    },
     "headers": {
       "year": "Year",
       "endingBalance": "End balance",

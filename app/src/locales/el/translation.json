@@ -124,6 +124,10 @@
   "table": {
     "title": "Ετήσια ανάλυση",
     "description": "Με διαχωρισμό καταθέσεων και απόδοσης",
+    "actions": {
+      "exportCsv": "Εξαγωγή CSV",
+      "exportXlsx": "Εξαγωγή XLSX"
+    },
     "headers": {
       "year": "Έτος",
       "endingBalance": "Τελικό υπόλοιπο",

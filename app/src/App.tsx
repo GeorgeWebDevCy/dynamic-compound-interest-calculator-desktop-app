@@ -21,6 +21,7 @@ import {
   normalizeDateValue,
 } from './lib/dates'
 import { createPrefixedCurrencyFormatter } from './lib/currency'
+import { exportProjectionTableAsCsv, exportProjectionTableAsXlsx } from './lib/export'
 import { buildProjection, getNetAnnualRate } from './lib/projection'
 import {
   COMPOUNDING_OPTIONS,
@@ -545,6 +546,33 @@ function App() {
     ? `${t('table.withdrawalScheduleLabel')}: ${withdrawalScheduleSummary.replace(/\n/g, ', ')}`
     : undefined
 
+  const hasTableRows = activeProjection.table.length > 0
+
+  const buildExportContext = () => ({
+    table: activeProjection.table,
+    t,
+    formatYear: (value: number) => decimalFormatter.format(value),
+    formatCurrency: (value: number) => currencyFormatter.format(value),
+    getWithdrawalDate,
+    fileName: activeScenario?.name ?? t('table.title'),
+  })
+
+  const handleExportCsv = () => {
+    if (!hasTableRows) {
+      return
+    }
+
+    exportProjectionTableAsCsv(buildExportContext())
+  }
+
+  const handleExportXlsx = () => {
+    if (!hasTableRows) {
+      return
+    }
+
+    exportProjectionTableAsXlsx(buildExportContext())
+  }
+
   const renderTable = () =>
     activeProjection.table.map((row) => {
       const withdrawalDate = getWithdrawalDate(row.year)
@@ -927,8 +955,28 @@ function App() {
 
       <section className="panel table-panel">
         <div className="panel-head">
-          <h2>{t('table.title')}</h2>
-          <span className="panel-meta">{t('table.description')}</span>
+          <div className="panel-title">
+            <h2>{t('table.title')}</h2>
+            <span className="panel-meta">{t('table.description')}</span>
+          </div>
+          <div className="panel-actions">
+            <button
+              type="button"
+              className="scenario-button"
+              onClick={handleExportCsv}
+              disabled={!hasTableRows}
+            >
+              {t('table.actions.exportCsv')}
+            </button>
+            <button
+              type="button"
+              className="scenario-button"
+              onClick={handleExportXlsx}
+              disabled={!hasTableRows}
+            >
+              {t('table.actions.exportXlsx')}
+            </button>
+          </div>
         </div>
 
         <div className="table-scroll">
