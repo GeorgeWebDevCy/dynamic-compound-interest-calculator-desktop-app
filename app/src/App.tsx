@@ -1,5 +1,5 @@
 import type { ChangeEvent } from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TooltipProps } from 'recharts'
 import {
@@ -524,14 +524,17 @@ function App() {
     setPurchaseDateInput(formatDateForInput(nextActive?.settings.vuaaPurchaseDate ?? '') || '')
   }
 
-  const getWithdrawalDate = (yearValue: number) => {
-    const payoutYear = Math.max(currentYear - 1 + Math.ceil(yearValue), currentYear)
-    const iso = `${payoutYear}-12-31`
-    return {
-      iso,
-      label: formatDateForInput(iso) || `31/12/${payoutYear}`,
-    }
-  }
+  const getWithdrawalDate = useCallback(
+    (yearValue: number) => {
+      const payoutYear = Math.max(currentYear - 1 + Math.ceil(yearValue), currentYear)
+      const iso = `${payoutYear}-12-31`
+      return {
+        iso,
+        label: formatDateForInput(iso) || `31/12/${payoutYear}`,
+      }
+    },
+    [currentYear],
+  )
 
   const withdrawalScheduleSummary = useMemo(() => {
     if (!activeProjection.table.length) {
@@ -563,6 +566,7 @@ function App() {
     decimalFormatter,
     currencyFormatter,
     withdrawalTooltipLimit,
+    getWithdrawalDate,
   ])
 
   const withdrawalScheduleAriaLabel = withdrawalScheduleSummary

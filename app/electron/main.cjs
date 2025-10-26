@@ -1,9 +1,63 @@
 const fs = require('node:fs/promises')
+const fsSync = require('node:fs')
 const path = require('node:path')
+const { spawnSync } = require('node:child_process')
 const { app, BrowserWindow, ipcMain } = require('electron')
 const { readConfig, writeConfig } = require('./configStore.cjs')
 
 const isDev = !!process.env.VITE_DEV_SERVER_URL
+const DEFAULT_SCHEMA_DIRS = ['/usr/share/glib-2.0/schemas', '/usr/local/share/glib-2.0/schemas']
+
+const applyLinuxWorkarounds = () => {
+  if (process.platform !== 'linux') {
+    return
+  }
+
+  if (!process.env.GSETTINGS_SCHEMA_DIR) {
+    const fallbackDir = DEFAULT_SCHEMA_DIRS.find((dir) => {
+      try {
+        fsSync.accessSync(dir, fsSync.constants.R_OK)
+        return true
+      } catch {
+        return false
+      }
+    })
+
+    if (fallbackDir) {
+      process.env.GSETTINGS_SCHEMA_DIR = fallbackDir
+    }
+  }
+
+  if (!process.env.XDG_CURRENT_DESKTOP) {
+    process.env.XDG_CURRENT_DESKTOP = 'GNOME'
+  }
+
+  if (process.env.ELECTRON_ENABLE_HARDWARE_ACCELERATION !== 'true') {
+    app.disableHardwareAcceleration()
+    app.commandLine.appendSwitch('disable-gpu')
+    app.commandLine.appendSwitch('disable-gpu-compositing')
+  }
+
+  try {
+    const result = spawnSync('gsettings', ['range', 'org.gnome.desktop.interface', 'font-antialiasing'], {
+      stdio: 'ignore',
+    })
+
+    if (result.status !== 0) {
+      console.warn(
+        'GNOME interface schemas missing "font-antialiasing" key. Install/reinstall gsettings-desktop-schemas, then run "sudo glib-compile-schemas <schema-dir>" (e.g. /usr/share/glib-2.0/schemas) and set GSETTINGS_SCHEMA_DIR so GTK can find the key.',
+      )
+    }
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      console.warn(
+        'gsettings command not found. Install gsettings-desktop-schemas so Electron can read org.gnome.desktop.interface and avoid font-antialiasing schema errors.',
+      )
+    }
+  }
+}
+
+applyLinuxWorkarounds()
 
 let mainWindow
 

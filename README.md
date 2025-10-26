@@ -140,3 +140,9 @@ Follow these steps when preparing the GitHub release for v1.0.0 (adapt as needed
 3. **Package installers**: execute the platform-specific `npm run package` commands above on Windows, macOS, and Linux hosts; collect the installers from `app/dist/`.
 4. **Draft release notes**: summarize highlights, link to any key issues, and list checksums for each installer.
 5. **Publish on GitHub**: create the `v1.0.0` tag, upload the installers as assets, paste the notes, and double-check download links before publishing.
+
+## Troubleshooting
+
+| Symptom | Fix |
+| --- | --- |
+| `Schema org.gnome.desktop.interface does not have key font-antialiasing` (Electron exits on Linux) | Install/reinstall `gsettings-desktop-schemas`, run `sudo glib-compile-schemas /usr/share/glib-2.0/schemas`, and ensure `GSETTINGS_SCHEMA_DIR` points to that folder (the app now sets it automatically when readable). You can verify the fix with `gsettings get org.gnome.desktop.interface font-antialiasing`. GPU is disabled by default on Linux; set `ELECTRON_ENABLE_HARDWARE_ACCELERATION=true` to opt back in once the schema works. |

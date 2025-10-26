@@ -66,5 +66,6 @@ For a user-facing walkthrough (including screenshots), point folks to `../docs/i
 | --- | --- |
 | `Vite requires Node.js version 20.19+ or 22.12+` | Activate the version in `.nvmrc` with nvm/nvm-windows or install Node 20.19.0 manually, then rerun `npm install` and `npm run package`. |
 | Native module rebuild issues | Delete `node_modules`, ensure the correct Node version is active, and run `npm install` before packaging. |
+| `Schema org.gnome.desktop.interface does not have key font-antialiasing` on Linux | Install/reinstall `gsettings-desktop-schemas`, run `sudo glib-compile-schemas /usr/share/glib-2.0/schemas`, and let the app's default `GSETTINGS_SCHEMA_DIR` fallback point to that directory (or set it yourself). Verify with `gsettings get org.gnome.desktop.interface font-antialiasing`. GPU is disabled by default on Linux; set `ELECTRON_ENABLE_HARDWARE_ACCELERATION=true` to opt back in afterward. |
 
 For additional details on the Electron/Vite toolchain, see the scripts defined in `package.json`.
