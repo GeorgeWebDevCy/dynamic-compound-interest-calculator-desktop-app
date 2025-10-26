@@ -21,6 +21,7 @@
     "duration": "Διάρκεια επένδυσης (έτη)",
     "expenseRatio": "Δείκτης εξόδων ETF (VUAA — 0,07%)",
     "platformFee": "Προμήθεια πλατφόρμας (Freedom24 % θεματοφυλακής)",
+    "targetBalance": "Στόχος υπολοίπου (€)",
     "shareCount": "Μετοχές VUAA",
     "purchasePrice": "Μέση τιμή αγοράς (€)",
     "purchaseDate": {
@@ -32,6 +33,15 @@
         "remaining_other": "Απομένουν {{count}} πλήρεις μήνες το {{year}} για τον προγραμματισμό καταθέσεων."
       }
     }
+  },
+  "scenarios": {
+    "activeLabel": "Ενεργό σενάριο",
+    "add": "Προσθήκη σεναρίου",
+    "duplicate": "Αντιγραφή",
+    "delete": "Διαγραφή",
+    "nameLabel": "Όνομα σεναρίου",
+    "defaultName": "Σενάριο {{index}}",
+    "copyName": "{{name}} (αντίγραφο)"
   },
   "options": {
     "contribution": {
@@ -56,6 +66,13 @@
     "projectedBalance": {
       "eyebrow": "Προβλεπόμενο υπόλοιπο",
       "summary": "Σε {{years}} έτη με υπόθεση μικτής απόδοσης {{grossReturn}} και εξόδων {{expenseDrag}}."
+    },
+    "goal": {
+      "eyebrow": "Ορόσημο στόχου",
+      "metTitle": "Επιτεύχθηκε στόχος {{value}}",
+      "metSummary": "Το έτος {{year}} προβλέπεται υπόλοιπο {{balance}}.",
+      "unmetTitle": "Ο στόχος δεν επιτεύχθηκε",
+      "unmetSummary": "Η προβολή δεν φτάνει ποτέ τον στόχο {{value}} στη διάρκεια που επιλέχθηκε."
     },
     "statCards": {
       "totalContributions": "Συνολικές καταθέσεις",
@@ -110,11 +127,19 @@
     }
   },
   "chart": {
-    "year": "Έτος {{value}}"
+    "year": "Έτος {{value}}",
+    "goalLineLabel": "Στόχος",
+    "tooltip": {
+      "goalReached": "Επιτεύχθηκε στόχος ({{value}})"
+    }
   },
   "table": {
     "title": "Ετήσια ανάλυση",
     "description": "Με διαχωρισμό καταθέσεων και απόδοσης",
+    "actions": {
+      "exportCsv": "Εξαγωγή CSV",
+      "exportXlsx": "Εξαγωγή XLSX"
+    },
     "headers": {
       "year": "Έτος",
       "endingBalance": "Τελικό υπόλοιπο",
