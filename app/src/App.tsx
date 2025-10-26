@@ -1,13 +1,11 @@
 import type { ChangeEvent } from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TooltipProps } from 'recharts'
 import {
   CartesianGrid,
-  Legend,
   Line,
   LineChart,
-  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -22,14 +20,12 @@ import {
   normalizeDateValue,
 } from './lib/dates'
 import { createPrefixedCurrencyFormatter } from './lib/currency'
-import { exportProjectionTableAsCsv, exportProjectionTableAsXlsx } from './lib/export'
 import { buildProjection, getNetAnnualRate } from './lib/projection'
 import {
   COMPOUNDING_OPTIONS,
   CONTRIBUTION_OPTIONS,
   DEFAULT_SETTINGS,
   type CompoundSettings,
-  type Scenario,
 } from './types/finance'
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
@@ -57,99 +53,21 @@ const resolveLanguageCode = (language?: string) => {
 
 const resolveLocale = (language: string) => (language === 'el' ? 'el-GR' : 'en-GB')
 
-const DEFAULT_SCENARIO_LIST: Scenario[] = DEFAULT_SETTINGS.map((scenario) => ({
-  ...scenario,
-  settings: { ...scenario.settings },
-}))
-
-const FALLBACK_COLOR = DEFAULT_SCENARIO_LIST[0]?.color ?? '#10b981'
-const FALLBACK_SETTINGS: CompoundSettings =
-  DEFAULT_SCENARIO_LIST[0]?.settings ?? {
-    principal: 0,
-    contribution: 0,
-    contributionFrequency: 12,
-    annualReturn: 0,
-    compoundingFrequency: 12,
-    years: 1,
-    fundExpenseRatio: 0,
-    platformFee: 0,
-    targetBalance: 0,
-    vuaaShareCount: 0,
-    vuaaPurchasePrice: 0,
-    vuaaPurchaseDate: '',
-  }
-
-const COLOR_PALETTE = [
-  '#10b981',
-  '#6366f1',
-  '#f97316',
-  '#f43f5e',
-  '#14b8a6',
-  '#8b5cf6',
-  '#facc15',
-  '#0ea5e9',
-]
-
-const cloneScenario = (scenario: Scenario): Scenario => ({
-  ...scenario,
-  settings: { ...scenario.settings },
-})
-
-const getDefaultScenarios = () => DEFAULT_SCENARIO_LIST.map((scenario) => cloneScenario(scenario))
-
-const createScenarioId = () => {
-  if (typeof globalThis.crypto !== 'undefined' && 'randomUUID' in globalThis.crypto) {
-    return (globalThis.crypto as Crypto).randomUUID()
-  }
-
-  return `scenario-${Date.now()}-${Math.random().toString(16).slice(2)}`
-}
-
-const getNextColor = (usedColors: Set<string>) => {
-  for (const color of COLOR_PALETTE) {
-    if (!usedColors.has(color)) {
-      usedColors.add(color)
-      return color
-    }
-  }
-
-  const hue = Math.round(((usedColors.size + 1) * 137.508) % 360)
-  const generated = `hsl(${hue} 70% 50%)`
-  usedColors.add(generated)
-  return generated
-}
-
-const ensureScenarios = (scenarios: Scenario[]) =>
-  scenarios.length ? scenarios.map((scenario) => cloneScenario(scenario)) : getDefaultScenarios()
-
-const INITIAL_SCENARIOS = getDefaultScenarios()
+const WITHDRAWAL_TOOLTIP_LIMIT = 5
 
 function App() {
   const { t, i18n } = useTranslation()
   const languageCode = resolveLanguageCode(i18n.resolvedLanguage ?? i18n.language)
   const locale = resolveLocale(languageCode)
-  const [scenarios, setScenarios] = useState<Scenario[]>(() =>
-    INITIAL_SCENARIOS.map((scenario) => cloneScenario(scenario)),
-  )
-  const [activeScenarioId, setActiveScenarioId] = useState<string>(
-    INITIAL_SCENARIOS[0]?.id ?? '',
-  )
+  const [settings, setSettings] = useState<CompoundSettings>(DEFAULT_SETTINGS)
   const [loading, setLoading] = useState(true)
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [purchaseDateInput, setPurchaseDateInput] = useState(
-    () => formatDateForInput(INITIAL_SCENARIOS[0]?.settings.vuaaPurchaseDate ?? '') || '',
+    () => formatDateForInput(DEFAULT_SETTINGS.vuaaPurchaseDate) || '',
   )
   const [isEditingPurchaseDate, setIsEditingPurchaseDate] = useState(false)
   const [formulasOpen, setFormulasOpen] = useState(false)
   const formulaPanelId = 'formulas-panel-body'
-  const activeScenario = useMemo(
-    () =>
-      scenarios.find((scenario) => scenario.id === activeScenarioId) ??
-      scenarios[0] ??
-      null,
-    [scenarios, activeScenarioId],
-  )
-  const activeSettings = activeScenario?.settings ?? FALLBACK_SETTINGS
 
   const currencyFormatter = useMemo(
     () =>
@@ -220,7 +138,6 @@ function App() {
 
   useEffect(() => {
     if (!window.configAPI) {
-      setScenarios((prev) => (prev.length ? prev : getDefaultScenarios()))
       setLoading(false)
       return
     }
@@ -228,32 +145,13 @@ function App() {
     window.configAPI
       .load()
       .then((stored) => {
-        const incoming = ensureScenarios(stored?.scenarios ?? [])
-        setScenarios(incoming)
-        setActiveScenarioId((current) => {
-          if (current && incoming.some((scenario) => scenario.id === current)) {
-            return current
-          }
-
-          return incoming[0]?.id ?? current
-        })
+        if (stored) {
+          setSettings({ ...DEFAULT_SETTINGS, ...stored })
+        }
       })
       .catch((error) => console.warn('Unable to load saved settings', error))
       .finally(() => setLoading(false))
   }, [])
-
-  useEffect(() => {
-    if (!scenarios.length) {
-      const defaults = getDefaultScenarios()
-      setScenarios(defaults)
-      setActiveScenarioId(defaults[0]?.id ?? '')
-      return
-    }
-
-    if (!activeScenarioId || !scenarios.some((scenario) => scenario.id === activeScenarioId)) {
-      setActiveScenarioId(scenarios[0]?.id ?? activeScenarioId)
-    }
-  }, [scenarios, activeScenarioId])
 
   useEffect(() => {
     if (loading || !window.configAPI) {
@@ -263,90 +161,50 @@ function App() {
     setSaveState('saving')
     const debounce = window.setTimeout(() => {
       window.configAPI
-        ?.save({ scenarios })
+        ?.save(settings)
         .then(() => setSaveState('saved'))
         .catch(() => setSaveState('error'))
     }, 350)
 
     return () => window.clearTimeout(debounce)
-  }, [scenarios, loading])
+  }, [settings, loading])
 
   useEffect(() => {
     if (isEditingPurchaseDate) {
       return
     }
 
-    setPurchaseDateInput(formatDateForInput(activeSettings.vuaaPurchaseDate) || '')
-  }, [activeSettings.vuaaPurchaseDate, isEditingPurchaseDate])
+    setPurchaseDateInput(formatDateForInput(settings.vuaaPurchaseDate) || '')
+  }, [settings.vuaaPurchaseDate, isEditingPurchaseDate])
 
-  const scenarioAnalyses = useMemo(
-    () =>
-      scenarios.map((scenario) => {
-        const months = getWholeMonthsUntilYearEnd(scenario.settings.vuaaPurchaseDate)
-        return {
-          scenario,
-          remainingContributionMonths: months,
-          projection: buildProjection(scenario.settings, { remainingContributionMonths: months }),
-        }
-      }),
-    [scenarios],
+  const remainingContributionMonths = useMemo(
+    () => getWholeMonthsUntilYearEnd(settings.vuaaPurchaseDate),
+    [settings.vuaaPurchaseDate],
   )
-
-  const activeAnalysis =
-    scenarioAnalyses.find((analysis) => analysis.scenario.id === activeScenario?.id) ??
-    scenarioAnalyses[0] ??
-    null
-
-  const remainingContributionMonths =
-    activeAnalysis?.remainingContributionMonths ??
-    getWholeMonthsUntilYearEnd(activeSettings.vuaaPurchaseDate)
-
-  const activeProjection =
-    activeAnalysis?.projection ??
-    buildProjection(activeSettings, { remainingContributionMonths })
-
-  const milestoneMap = useMemo(() => {
-    const milestones = new Map<string, { year: number; value: number; target: number }>()
-
-    scenarioAnalyses.forEach(({ scenario, projection }) => {
-      const target = Math.max(scenario.settings.targetBalance, 0)
-      if (!target) {
-        return
-      }
-
-      const match = projection.table.find((row) => row.endingBalance >= target)
-      if (match) {
-        milestones.set(scenario.id, { year: match.year, value: match.endingBalance, target })
-      }
-    })
-
-    return milestones
-  }, [scenarioAnalyses])
-
-  const activeMilestone =
-    (activeScenario?.id ? milestoneMap.get(activeScenario.id) : undefined) ?? null
 
   const purchaseDateInFuture = useMemo(
-    () => isPurchaseDateInFuture(activeSettings.vuaaPurchaseDate),
-    [activeSettings.vuaaPurchaseDate],
+    () => isPurchaseDateInFuture(settings.vuaaPurchaseDate),
+    [settings.vuaaPurchaseDate],
   )
 
-  const expenseDrag = activeSettings.fundExpenseRatio + activeSettings.platformFee
+  const projection = useMemo(
+    () => buildProjection(settings, { remainingContributionMonths }),
+    [settings, remainingContributionMonths],
+  )
+  const expenseDrag = settings.fundExpenseRatio + settings.platformFee
   const netAnnualRate = useMemo(
-    () => getNetAnnualRate(activeSettings.annualReturn, expenseDrag),
-    [activeSettings.annualReturn, expenseDrag],
+    () => getNetAnnualRate(settings.annualReturn, expenseDrag),
+    [settings.annualReturn, expenseDrag],
   )
   const currentYear = new Date().getFullYear()
-  const withdrawalTooltipLimit = Math.max(Math.ceil(activeSettings.years), 1)
 
-  const compoundingPeriods = Math.max(activeSettings.compoundingFrequency, 1)
-  const grossReturnRate = activeSettings.annualReturn / 100
+  const compoundingPeriods = Math.max(settings.compoundingFrequency, 1)
+  const grossReturnRate = settings.annualReturn / 100
   const expenseRate = expenseDrag / 100
   const growthFactor = Math.max(1 + netAnnualRate, 0.0001)
   const periodicRate = Math.pow(growthFactor, 1 / compoundingPeriods) - 1
   const contributionPerPeriod =
-    activeSettings.contribution *
-    (activeSettings.contributionFrequency / compoundingPeriods)
+    settings.contribution * (settings.contributionFrequency / compoundingPeriods)
   const normalizedContributionMonths = Math.min(
     Math.max(remainingContributionMonths, 0),
     12,
@@ -355,37 +213,14 @@ function App() {
   const firstYearContributionPerPeriod =
     contributionPerPeriod * firstYearContributionFactor
 
-  const chartData = useMemo(() => {
-    const yearMap = new Map<number, Record<string, number | null>>()
-
-    scenarioAnalyses.forEach(({ scenario, projection }) => {
-      projection.chartPoints.forEach((point) => {
-        const existing = yearMap.get(point.year) ?? {}
-        existing[scenario.id] = point.balance
-        yearMap.set(point.year, existing)
-      })
-    })
-
-    return Array.from(yearMap.entries())
-      .map(([year, entry]) => ({ year, ...entry }))
-      .sort((a, b) => a.year - b.year)
-  }, [scenarioAnalyses])
-
-  const updateActiveScenarioField = <K extends keyof CompoundSettings>(
+  const updateField = <K extends keyof CompoundSettings>(
     field: K,
     value: CompoundSettings[K],
   ) => {
-    if (!activeScenarioId) {
-      return
-    }
-
-    setScenarios((prev) =>
-      prev.map((scenario) =>
-        scenario.id === activeScenarioId
-          ? { ...scenario, settings: { ...scenario.settings, [field]: value } }
-          : scenario,
-      ),
-    )
+    setSettings((prev) => ({
+      ...prev,
+      [field]: value,
+    }))
   }
 
   const handleNumericInputChange =
@@ -393,48 +228,38 @@ function App() {
     (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const nextValue = Number(event.target.value)
       const sanitizedValue = Number.isNaN(nextValue) ? 0 : nextValue
-      updateActiveScenarioField(field, sanitizedValue as CompoundSettings[NumericSettingKey])
+      updateField(field, sanitizedValue as CompoundSettings[NumericSettingKey])
     }
 
   const handlePurchaseDateChange = (event: ChangeEvent<HTMLInputElement>) => {
     const rawValue = event.target.value
     setPurchaseDateInput(rawValue)
 
-    if (!activeScenarioId) {
-      return
-    }
-
     if (rawValue.trim() === '') {
-      updateActiveScenarioField('vuaaPurchaseDate', '' as CompoundSettings[DateSettingKey])
+      updateField('vuaaPurchaseDate', '' as CompoundSettings[DateSettingKey])
       return
     }
 
     const normalized = normalizeDateValue(rawValue)
     if (normalized) {
-      updateActiveScenarioField('vuaaPurchaseDate', normalized as CompoundSettings[DateSettingKey])
+      updateField('vuaaPurchaseDate', normalized as CompoundSettings[DateSettingKey])
     }
   }
 
   const handlePurchaseDateBlur = () => {
     setIsEditingPurchaseDate(false)
 
-    if (!activeScenarioId) {
-      return
-    }
-
     if (purchaseDateInput.trim() === '') {
-      updateActiveScenarioField('vuaaPurchaseDate', '' as CompoundSettings[DateSettingKey])
+      updateField('vuaaPurchaseDate', '' as CompoundSettings[DateSettingKey])
       return
     }
 
     const normalized = normalizeDateValue(purchaseDateInput)
     if (normalized) {
-      updateActiveScenarioField('vuaaPurchaseDate', normalized as CompoundSettings[DateSettingKey])
+      updateField('vuaaPurchaseDate', normalized as CompoundSettings[DateSettingKey])
       setPurchaseDateInput(formatDateForInput(normalized) || '')
-    } else if (activeScenario) {
-      setPurchaseDateInput(formatDateForInput(activeScenario.settings.vuaaPurchaseDate) || '')
     } else {
-      setPurchaseDateInput('')
+      setPurchaseDateInput(formatDateForInput(settings.vuaaPurchaseDate) || '')
     }
   }
 
@@ -444,105 +269,25 @@ function App() {
     void i18n.changeLanguage(event.target.value)
   }
 
-  const handleScenarioSwitch = (event: ChangeEvent<HTMLSelectElement>) => {
-    setIsEditingPurchaseDate(false)
-    setActiveScenarioId(event.target.value)
-  }
-
-  const handleScenarioNameChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const nextName = event.target.value
-    if (!activeScenarioId) {
-      return
-    }
-
-    setScenarios((prev) =>
-      prev.map((scenario) =>
-        scenario.id === activeScenarioId ? { ...scenario, name: nextName } : scenario,
-      ),
-    )
-  }
-
-  const handleAddScenario = () => {
-    setScenarios((prev) => {
-      const usedColors = new Set(prev.map((scenario) => scenario.color))
-      const nextColor = getNextColor(usedColors)
-      const nextScenario: Scenario = {
-        id: createScenarioId(),
-        name: t('scenarios.defaultName', { index: prev.length + 1 }),
-        color: nextColor,
-        settings: { ...FALLBACK_SETTINGS },
-      }
-      setActiveScenarioId(nextScenario.id)
-      setIsEditingPurchaseDate(false)
-      return [...prev, nextScenario]
-    })
-  }
-
-  const handleDuplicateScenario = () => {
-    if (!activeScenario) {
-      return
-    }
-
-    setScenarios((prev) => {
-      const usedColors = new Set(prev.map((scenario) => scenario.color))
-      const nextColor = getNextColor(usedColors)
-      const duplicate: Scenario = {
-        id: createScenarioId(),
-        name: t('scenarios.copyName', { name: activeScenario.name }),
-        color: nextColor,
-        settings: { ...activeScenario.settings },
-      }
-      setActiveScenarioId(duplicate.id)
-      setIsEditingPurchaseDate(false)
-      return [...prev, duplicate]
-    })
-  }
-
-  const handleDeleteScenario = () => {
-    setScenarios((prev) => {
-      if (prev.length <= 1) {
-        return prev
-      }
-
-      const filtered = prev.filter((scenario) => scenario.id !== activeScenarioId)
-      if (!filtered.length) {
-        return prev
-      }
-
-      setActiveScenarioId(filtered[0].id)
-      setIsEditingPurchaseDate(false)
-      return filtered
-    })
-  }
-
   const resetDefaults = () => {
-    const defaults = getDefaultScenarios()
-    setScenarios(defaults)
-    const nextActive = defaults[0]
-    setActiveScenarioId(nextActive?.id ?? '')
-    setIsEditingPurchaseDate(false)
-    setPurchaseDateInput(formatDateForInput(nextActive?.settings.vuaaPurchaseDate ?? '') || '')
+    setSettings({ ...DEFAULT_SETTINGS })
   }
 
-  const getWithdrawalDate = useCallback(
-    (yearValue: number) => {
-      const payoutYear = Math.max(currentYear - 1 + Math.ceil(yearValue), currentYear)
-      const iso = `${payoutYear}-12-31`
-      return {
-        iso,
-        label: formatDateForInput(iso) || `31/12/${payoutYear}`,
-      }
-    },
-    [currentYear],
-  )
+  const getWithdrawalDate = (yearValue: number) => {
+    const payoutYear = Math.max(currentYear - 1 + Math.ceil(yearValue), currentYear)
+    const iso = `${payoutYear}-12-31`
+    return {
+      iso,
+      label: formatDateForInput(iso) || `31/12/${payoutYear}`,
+    }
+  }
 
   const withdrawalScheduleSummary = useMemo(() => {
-    if (!activeProjection.table.length) {
+    if (!projection.table.length) {
       return ''
     }
 
-    const limit = Math.min(withdrawalTooltipLimit, activeProjection.table.length)
-    const entries = activeProjection.table.slice(0, limit).map((row) => {
+    const entries = projection.table.slice(0, WITHDRAWAL_TOOLTIP_LIMIT).map((row) => {
       const withdrawalDate = getWithdrawalDate(row.year)
       return t('table.withdrawalScheduleTooltip', {
         year: decimalFormatter.format(row.year),
@@ -551,57 +296,23 @@ function App() {
       })
     })
 
-    if (activeProjection.table.length > limit) {
+    if (projection.table.length > WITHDRAWAL_TOOLTIP_LIMIT) {
       entries.push(
         t('table.withdrawalScheduleMore', {
-          count: activeProjection.table.length - limit,
+          count: projection.table.length - WITHDRAWAL_TOOLTIP_LIMIT,
         }),
       )
     }
 
     return entries.join('\n')
-  }, [
-    activeProjection.table,
-    t,
-    decimalFormatter,
-    currencyFormatter,
-    withdrawalTooltipLimit,
-    getWithdrawalDate,
-  ])
+  }, [projection.table, t, decimalFormatter, currencyFormatter])
 
   const withdrawalScheduleAriaLabel = withdrawalScheduleSummary
     ? `${t('table.withdrawalScheduleLabel')}: ${withdrawalScheduleSummary.replace(/\n/g, ', ')}`
     : undefined
 
-  const hasTableRows = activeProjection.table.length > 0
-
-  const buildExportContext = () => ({
-    table: activeProjection.table,
-    t,
-    formatYear: (value: number) => decimalFormatter.format(value),
-    formatCurrency: (value: number) => currencyFormatter.format(value),
-    getWithdrawalDate,
-    fileName: activeScenario?.name ?? t('table.title'),
-  })
-
-  const handleExportCsv = () => {
-    if (!hasTableRows) {
-      return
-    }
-
-    exportProjectionTableAsCsv(buildExportContext())
-  }
-
-  const handleExportXlsx = () => {
-    if (!hasTableRows) {
-      return
-    }
-
-    exportProjectionTableAsXlsx(buildExportContext())
-  }
-
   const renderTable = () =>
-    activeProjection.table.map((row) => {
+    projection.table.map((row) => {
       const withdrawalDate = getWithdrawalDate(row.year)
       return (
         <tr key={row.year}>
@@ -662,66 +373,6 @@ function App() {
             <span className="panel-meta">{t('inputs.description')}</span>
           </div>
 
-          <div className="scenario-controls">
-            <div className="scenario-header">
-              <label className="scenario-label">
-                <span>{t('scenarios.activeLabel')}</span>
-                <div className="scenario-select-wrapper">
-                  <span
-                    className="scenario-color-dot"
-                    aria-hidden="true"
-                    style={{ backgroundColor: activeScenario?.color ?? FALLBACK_COLOR }}
-                  />
-                  <select
-                    value={activeScenario?.id ?? ''}
-                    onChange={handleScenarioSwitch}
-                    className="scenario-select"
-                  >
-                    {scenarios.map((scenario) => (
-                      <option key={scenario.id} value={scenario.id}>
-                        {scenario.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </label>
-              <div className="scenario-actions">
-                <button
-                  type="button"
-                  className="scenario-button"
-                  onClick={handleAddScenario}
-                >
-                  {t('scenarios.add')}
-                </button>
-                <button
-                  type="button"
-                  className="scenario-button"
-                  onClick={handleDuplicateScenario}
-                  disabled={!activeScenario}
-                >
-                  {t('scenarios.duplicate')}
-                </button>
-                <button
-                  type="button"
-                  className="scenario-button"
-                  onClick={handleDeleteScenario}
-                  disabled={scenarios.length <= 1}
-                >
-                  {t('scenarios.delete')}
-                </button>
-              </div>
-            </div>
-            <label className="scenario-label">
-              <span>{t('scenarios.nameLabel')}</span>
-              <input
-                type="text"
-                className="scenario-name-input"
-                value={activeScenario?.name ?? ''}
-                onChange={handleScenarioNameChange}
-              />
-            </label>
-          </div>
-
           <div className="input-grid">
             <label>
               <span>{t('inputs.principal')}</span>
@@ -729,7 +380,7 @@ function App() {
                 type="number"
                 min={0}
                 step={100}
-                value={activeSettings.principal}
+                value={settings.principal}
                 onChange={handleNumericInputChange('principal')}
               />
             </label>
@@ -740,7 +391,7 @@ function App() {
                 type="number"
                 min={0}
                 step={50}
-                value={activeSettings.contribution}
+                value={settings.contribution}
                 onChange={handleNumericInputChange('contribution')}
               />
             </label>
@@ -748,7 +399,7 @@ function App() {
             <label>
               <span>{t('inputs.contributionCadence')}</span>
               <select
-                value={activeSettings.contributionFrequency}
+                value={settings.contributionFrequency}
                 onChange={handleNumericInputChange('contributionFrequency')}
               >
                 {CONTRIBUTION_OPTIONS.map((option) => (
@@ -762,7 +413,7 @@ function App() {
             <label>
               <span>{t('inputs.compoundingFrequency')}</span>
               <select
-                value={activeSettings.compoundingFrequency}
+                value={settings.compoundingFrequency}
                 onChange={handleNumericInputChange('compoundingFrequency')}
               >
                 {COMPOUNDING_OPTIONS.map((option) => (
@@ -780,7 +431,7 @@ function App() {
                 min={0}
                 max={40}
                 step={0.1}
-                value={activeSettings.annualReturn}
+                value={settings.annualReturn}
                 onChange={handleNumericInputChange('annualReturn')}
               />
             </label>
@@ -792,7 +443,7 @@ function App() {
                 min={1}
                 max={60}
                 step={1}
-                value={activeSettings.years}
+                value={settings.years}
                 onChange={handleNumericInputChange('years')}
               />
             </label>
@@ -804,7 +455,7 @@ function App() {
                 min={0}
                 max={2}
                 step={0.01}
-                value={activeSettings.fundExpenseRatio}
+                value={settings.fundExpenseRatio}
                 onChange={handleNumericInputChange('fundExpenseRatio')}
               />
             </label>
@@ -816,19 +467,8 @@ function App() {
                 min={0}
                 max={5}
                 step={0.1}
-                value={activeSettings.platformFee}
+                value={settings.platformFee}
                 onChange={handleNumericInputChange('platformFee')}
-              />
-            </label>
-
-            <label>
-              <span>{t('inputs.targetBalance')}</span>
-              <input
-                type="number"
-                min={0}
-                step={1000}
-                value={activeSettings.targetBalance}
-                onChange={handleNumericInputChange('targetBalance')}
               />
             </label>
 
@@ -838,7 +478,7 @@ function App() {
                 type="number"
                 min={0}
                 step={0.01}
-                value={activeSettings.vuaaShareCount}
+                value={settings.vuaaShareCount}
                 onChange={handleNumericInputChange('vuaaShareCount')}
               />
             </label>
@@ -849,7 +489,7 @@ function App() {
                 type="number"
                 min={0}
                 step={0.01}
-                value={activeSettings.vuaaPurchasePrice}
+                value={settings.vuaaPurchasePrice}
                 onChange={handleNumericInputChange('vuaaPurchasePrice')}
               />
             </label>
@@ -893,52 +533,23 @@ function App() {
           <div className="projection-summary">
             <div>
               <p className="eyebrow">{t('projection.projectedBalance.eyebrow')}</p>
-              <h3>{currencyFormatter.format(activeProjection.totals.endingBalance)}</h3>
+              <h3>{currencyFormatter.format(projection.totals.endingBalance)}</h3>
               <p className="muted">
                 {t('projection.projectedBalance.summary', {
-                  years: activeSettings.years,
-                  grossReturn: percentFormatter.format(activeSettings.annualReturn / 100),
+                  years: settings.years,
+                  grossReturn: percentFormatter.format(settings.annualReturn / 100),
                   expenseDrag: percentFormatter.format(expenseDrag / 100),
                 })}
               </p>
             </div>
-            {activeSettings.targetBalance > 0 && (
-              <div className="goal-card">
-                <p className="eyebrow">{t('projection.goal.eyebrow')}</p>
-                {activeMilestone ? (
-                  <>
-                    <h4>
-                      {t('projection.goal.metTitle', {
-                        value: currencyFormatter.format(activeSettings.targetBalance),
-                      })}
-                    </h4>
-                    <p className="muted">
-                      {t('projection.goal.metSummary', {
-                        year: decimalFormatter.format(activeMilestone.year),
-                        balance: currencyFormatter.format(activeMilestone.value),
-                      })}
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <h4>{t('projection.goal.unmetTitle')}</h4>
-                    <p className="muted">
-                      {t('projection.goal.unmetSummary', {
-                        value: currencyFormatter.format(activeSettings.targetBalance),
-                      })}
-                    </p>
-                  </>
-                )}
-              </div>
-            )}
             <div className="stat-grid">
               <StatCard
                 label={t('projection.statCards.totalContributions')}
-                value={currencyFormatter.format(activeProjection.totals.contributions)}
+                value={currencyFormatter.format(projection.totals.contributions)}
               />
               <StatCard
                 label={t('projection.statCards.growth')}
-                value={currencyFormatter.format(activeProjection.totals.growth)}
+                value={currencyFormatter.format(projection.totals.growth)}
               />
               <StatCard
                 label={t('projection.statCards.expenseDrag')}
@@ -949,7 +560,7 @@ function App() {
               <StatCard
                 label={t('projection.statCards.contributionCadence')}
                 value={t('projection.statCards.contributionCadenceValue', {
-                  value: decimalFormatter.format(activeSettings.contributionFrequency),
+                  value: decimalFormatter.format(settings.contributionFrequency),
                 })}
               />
             </div>
@@ -959,18 +570,18 @@ function App() {
                 <div>
                   <dt>{t('projection.holdings.shareCount')}</dt>
                   <dd>
-                    {activeSettings.vuaaShareCount.toLocaleString(locale, {
+                    {settings.vuaaShareCount.toLocaleString(locale, {
                       maximumFractionDigits: 2,
                     })}
                   </dd>
                 </div>
                 <div>
                   <dt>{t('projection.holdings.purchasePrice')}</dt>
-                  <dd>{detailedEuroFormatter.format(activeSettings.vuaaPurchasePrice)}</dd>
+                  <dd>{detailedEuroFormatter.format(settings.vuaaPurchasePrice)}</dd>
                 </div>
                 <div>
                   <dt>{t('projection.holdings.purchaseDate')}</dt>
-                  <dd>{formatHoldingsDate(activeSettings.vuaaPurchaseDate)}</dd>
+                  <dd>{formatHoldingsDate(settings.vuaaPurchaseDate)}</dd>
                 </div>
               </dl>
             </div>
@@ -981,7 +592,13 @@ function App() {
         <section className="panel chart-panel">
           <div className="chart-wrapper">
             <ResponsiveContainer width="100%" height={320}>
-              <LineChart data={chartData}>
+              <LineChart data={projection.chartPoints}>
+                <defs>
+                  <linearGradient id="line" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.2} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid stroke="#1f2937" strokeDasharray="3 3" />
                 <XAxis
                   dataKey="year"
@@ -992,42 +609,21 @@ function App() {
                   stroke="#9ca3af"
                   tickFormatter={(value) => compactCurrencyFormatter.format(value)}
                 />
-                <Legend wrapperStyle={{ color: '#f5f6f9' }} iconType="circle" />
                 <Tooltip
                   content={
                     <ChartTooltip
                       formatBalance={currencyFormatter.format}
                       formatYear={decimalFormatter.format}
-                      milestones={milestoneMap}
                     />
                   }
                 />
-                {scenarioAnalyses.map(({ scenario }) => (
-                  <Line
-                    key={scenario.id}
-                    type="monotone"
-                    dataKey={scenario.id}
-                    name={scenario.name}
-                    stroke={scenario.color}
-                    strokeWidth={scenario.id === activeScenarioId ? 3 : 2}
-                    dot={false}
-                    connectNulls
-                    activeDot={{ r: 4 }}
-                  />
-                ))}
-                {activeSettings.targetBalance > 0 && (
-                  <ReferenceLine
-                    y={activeSettings.targetBalance}
-                    stroke="#facc15"
-                    strokeDasharray="6 6"
-                    label={{
-                      value: t('chart.goalLineLabel'),
-                      fill: '#facc15',
-                      fontSize: 12,
-                      position: 'right',
-                    }}
-                  />
-                )}
+                <Line
+                  type="monotone"
+                  dataKey="balance"
+                  stroke="url(#line)"
+                  strokeWidth={3}
+                  dot={false}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -1036,28 +632,8 @@ function App() {
 
       <section className="panel table-panel">
         <div className="panel-head">
-          <div className="panel-title">
-            <h2>{t('table.title')}</h2>
-            <span className="panel-meta">{t('table.description')}</span>
-          </div>
-          <div className="panel-actions">
-            <button
-              type="button"
-              className="scenario-button"
-              onClick={handleExportCsv}
-              disabled={!hasTableRows}
-            >
-              {t('table.actions.exportCsv')}
-            </button>
-            <button
-              type="button"
-              className="scenario-button"
-              onClick={handleExportXlsx}
-              disabled={!hasTableRows}
-            >
-              {t('table.actions.exportXlsx')}
-            </button>
-          </div>
+          <h2>{t('table.title')}</h2>
+          <span className="panel-meta">{t('table.description')}</span>
         </div>
 
         <div className="table-scroll">
@@ -1143,25 +719,25 @@ function App() {
                 },
               ]}
             />
-              <FormulaBlock
-                title={t('projection.formulas.contribution.title')}
-                equation={t('projection.formulas.contribution.equation')}
-                result={t('projection.formulas.contribution.result', {
-                  value: detailedEuroFormatter.format(contributionPerPeriod),
-                })}
-                items={[
-                  {
-                    label: t('projection.formulas.labels.contribution'),
-                    value: detailedEuroFormatter.format(activeSettings.contribution),
-                  },
-                  {
-                    label: t('projection.formulas.labels.contributionFrequency'),
-                    value: t('projection.formulas.contribution.frequencyValue', {
-                      value: decimalFormatter.format(activeSettings.contributionFrequency),
-                    }),
-                  },
-                  {
-                    label: t('projection.formulas.labels.compounding'),
+            <FormulaBlock
+              title={t('projection.formulas.contribution.title')}
+              equation={t('projection.formulas.contribution.equation')}
+              result={t('projection.formulas.contribution.result', {
+                value: detailedEuroFormatter.format(contributionPerPeriod),
+              })}
+              items={[
+                {
+                  label: t('projection.formulas.labels.contribution'),
+                  value: detailedEuroFormatter.format(settings.contribution),
+                },
+                {
+                  label: t('projection.formulas.labels.contributionFrequency'),
+                  value: t('projection.formulas.contribution.frequencyValue', {
+                    value: decimalFormatter.format(settings.contributionFrequency),
+                  }),
+                },
+                {
+                  label: t('projection.formulas.labels.compounding'),
                   value: t('projection.formulas.periodicRate.compoundingValue', {
                     value: decimalFormatter.format(compoundingPeriods),
                   }),
@@ -1177,19 +753,19 @@ function App() {
               })}
               items={[
                 {
-                    label: t('projection.formulas.labels.monthsRemaining'),
-                    value: decimalFormatter.format(normalizedContributionMonths),
-                  },
-                  {
-                    label: t('projection.formulas.labels.firstYearFactor'),
-                    value: factorFormatter.format(firstYearContributionFactor),
-                  },
-                  {
-                    label: t('projection.formulas.labels.firstYearContribution'),
-                    value: detailedEuroFormatter.format(firstYearContributionPerPeriod),
-                  },
-                ]}
-              />
+                  label: t('projection.formulas.labels.monthsRemaining'),
+                  value: decimalFormatter.format(normalizedContributionMonths),
+                },
+                {
+                  label: t('projection.formulas.labels.firstYearFactor'),
+                  value: factorFormatter.format(firstYearContributionFactor),
+                },
+                {
+                  label: t('projection.formulas.labels.firstYearContribution'),
+                  value: detailedEuroFormatter.format(firstYearContributionPerPeriod),
+                },
+              ]}
+            />
           </div>
         </div>
       </section>
@@ -1259,14 +835,11 @@ const StatusBadge = ({ state }: { state: SaveState }) => {
 const ChartTooltip = ({
   active,
   payload,
-  label,
   formatBalance,
   formatYear,
-  milestones,
 }: TooltipProps<number, string> & {
   formatBalance: (value: number) => string
   formatYear: (value: number) => string
-  milestones: Map<string, { year: number; value: number; target: number }>
 }) => {
   const { t } = useTranslation()
 
@@ -1274,62 +847,12 @@ const ChartTooltip = ({
     return null
   }
 
-  const filtered = payload.filter(
-    (entry) => typeof entry.value === 'number' && !Number.isNaN(entry.value),
-  )
-
-  if (filtered.length === 0) {
-    return null
-  }
-
-  const firstPayload = payload[0]?.payload as { year?: number } | undefined
-  const fallbackPayload = filtered[0]?.payload as { year?: number } | undefined
-  const resolvedYear =
-    typeof label === 'number'
-      ? label
-      : typeof firstPayload?.year === 'number'
-        ? firstPayload.year
-        : typeof fallbackPayload?.year === 'number'
-          ? fallbackPayload.year
-          : 0
+  const point = payload[0].payload as { year: number; balance: number }
 
   return (
     <div className="tooltip-card">
-      <span>{t('chart.year', { value: formatYear(resolvedYear) })}</span>
-      <ul className="tooltip-series">
-        {filtered.map((entry) => (
-          <li key={entry.dataKey as string} className="tooltip-series-item">
-            <span
-              className="tooltip-color"
-              style={{ backgroundColor: entry.color ?? FALLBACK_COLOR }}
-            />
-            <div className="tooltip-series-content">
-              <div className="tooltip-series-row">
-                <span className="tooltip-name">{entry.name}</span>
-                <span className="tooltip-value">{formatBalance(entry.value as number)}</span>
-              </div>
-              {(() => {
-                const dataKey = String(entry.dataKey ?? '')
-                const milestone = milestones.get(dataKey)
-                const milestoneReached =
-                  milestone && Math.abs(resolvedYear - milestone.year) < 0.01
-
-                if (!milestoneReached) {
-                  return null
-                }
-
-                return (
-                  <span className="tooltip-note">
-                    {t('chart.tooltip.goalReached', {
-                      value: formatBalance(milestone.target),
-                    })}
-                  </span>
-                )
-              })()}
-            </div>
-          </li>
-        ))}
-      </ul>
+      <span>{t('chart.year', { value: formatYear(point.year) })}</span>
+      <strong>{formatBalance(point.balance)}</strong>
     </div>
   )
 }

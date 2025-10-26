@@ -1,14 +1,10 @@
-import type { Scenario } from './types/finance'
-
-export type ScenarioConfig = {
-  scenarios: Scenario[]
-}
+import type { CompoundSettings } from './types/finance'
 
 declare global {
   interface Window {
     configAPI?: {
-      load: () => Promise<ScenarioConfig>
-      save: (payload: ScenarioConfig) => Promise<ScenarioConfig>
+      load: () => Promise<CompoundSettings>
+      save: (payload: CompoundSettings) => Promise<CompoundSettings>
     }
   }
 }
