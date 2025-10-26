@@ -110,6 +110,12 @@
   margin-bottom: 1.25rem;
 }
 
+.panel-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
 .panel-head h2 {
   margin: 0;
 }
@@ -117,6 +123,13 @@
 .panel-meta {
   font-size: 0.9rem;
   color: #9ba7bf;
+}
+
+.panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .scenario-controls {
