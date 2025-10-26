@@ -543,7 +543,7 @@ function App() {
                 </div>
                 <div>
                   <dt>{t('projection.holdings.purchaseDate')}</dt>
-                  <dd>{formatHoldingsDate(settings.vuaaPurchaseDate, locale)}</dd>
+                  <dd>{formatHoldingsDate(settings.vuaaPurchaseDate)}</dd>
                 </div>
               </dl>
             </div>
