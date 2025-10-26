@@ -15,6 +15,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "preview": "vite preview",
+    "prestart": "npm run build",
     "start": "cross-env NODE_ENV=production electron .",
     "package": "npm run build && electron-builder"
   },

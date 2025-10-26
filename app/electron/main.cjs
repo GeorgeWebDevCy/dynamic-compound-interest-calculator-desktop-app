@@ -125,7 +125,17 @@ const createWindow = async () => {
       win.webContents.openDevTools({ mode: 'detach' })
     }
   } else {
-    await win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'))
+    const rendererEntryPath = path.join(__dirname, '..', 'dist', 'index.html')
+
+    try {
+      await fs.access(rendererEntryPath)
+    } catch {
+      const errorMessage = `Renderer build missing at ${rendererEntryPath}. Run "npm run build" before "npm start" so Electron can load the production bundle.`
+      console.error(errorMessage)
+      throw new Error(errorMessage)
+    }
+
+    await win.loadFile(rendererEntryPath)
   }
 
   mainWindow = win
