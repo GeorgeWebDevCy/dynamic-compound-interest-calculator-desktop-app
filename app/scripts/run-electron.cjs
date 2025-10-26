@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 const { spawn } = require('node:child_process')
+const {
+  constants: { signals: signalNumbers },
+} = require('node:os')
 
 const electronBinary = require('electron')
 const mode = process.argv[2] ?? 'prod'
@@ -37,7 +40,10 @@ process.on('exit', () => {
 
 child.on('close', (code, signal) => {
   if (signal) {
-    process.exit(128 + signal)
+    const signalNumber = signalNumbers?.[signal]
+    const exitCode = typeof signalNumber === 'number' ? 128 + signalNumber : 1
+
+    process.exit(exitCode)
     return
   }
 
