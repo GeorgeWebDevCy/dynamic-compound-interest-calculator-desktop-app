@@ -53,8 +53,6 @@ const resolveLanguageCode = (language?: string) => {
 
 const resolveLocale = (language: string) => (language === 'el' ? 'el-GR' : 'en-GB')
 
-const WITHDRAWAL_TOOLTIP_LIMIT = 5
-
 function App() {
   const { t, i18n } = useTranslation()
   const languageCode = resolveLanguageCode(i18n.resolvedLanguage ?? i18n.language)
@@ -197,6 +195,7 @@ function App() {
     [settings.annualReturn, expenseDrag],
   )
   const currentYear = new Date().getFullYear()
+  const withdrawalTooltipLimit = Math.max(Math.ceil(settings.years), 1)
 
   const compoundingPeriods = Math.max(settings.compoundingFrequency, 1)
   const grossReturnRate = settings.annualReturn / 100
@@ -287,7 +286,8 @@ function App() {
       return ''
     }
 
-    const entries = projection.table.slice(0, WITHDRAWAL_TOOLTIP_LIMIT).map((row) => {
+    const limit = Math.min(withdrawalTooltipLimit, projection.table.length)
+    const entries = projection.table.slice(0, limit).map((row) => {
       const withdrawalDate = getWithdrawalDate(row.year)
       return t('table.withdrawalScheduleTooltip', {
         year: decimalFormatter.format(row.year),
@@ -296,16 +296,16 @@ function App() {
       })
     })
 
-    if (projection.table.length > WITHDRAWAL_TOOLTIP_LIMIT) {
+    if (projection.table.length > limit) {
       entries.push(
         t('table.withdrawalScheduleMore', {
-          count: projection.table.length - WITHDRAWAL_TOOLTIP_LIMIT,
+          count: projection.table.length - limit,
         }),
       )
     }
 
     return entries.join('\n')
-  }, [projection.table, t, decimalFormatter, currencyFormatter])
+  }, [projection.table, t, decimalFormatter, currencyFormatter, withdrawalTooltipLimit])
 
   const withdrawalScheduleAriaLabel = withdrawalScheduleSummary
     ? `${t('table.withdrawalScheduleLabel')}: ${withdrawalScheduleSummary.replace(/\n/g, ', ')}`

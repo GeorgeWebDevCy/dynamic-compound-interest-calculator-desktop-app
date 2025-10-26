@@ -89,6 +89,18 @@ Packaged binaries live under `app/dist/` once you run the platform-specific `npm
 
 Each platform stores the user configuration in its native `userData` path (see below) so reinstalling/upgrading preserves your latest inputs.
 
+## Withdrawal schedule helper
+
+The “Allowed withdrawal (4%)” column now exposes the calendar date when the withdrawal becomes available, plus a tooltip in the column header that mirrors the in-app format. The tooltip summarizes the first N years (matching the duration you set in the inputs) using the exact string rendered in the app:
+
+```
+Year 5 → €12,300 on 31/12/2029
+Year 6 → €12,900 on 31/12/2030
++4 more years
+```
+
+When you highlight this feature in release notes or support docs, copy the snippet above (or the localized version under `table.withdrawalScheduleTooltip`) so end users see the same structure they find in the UI.
+
 ## Persisted configuration
 
 The most recent inputs are cached in `dynamic-compound-config.json` inside Electron’s `userData` folder, which differs per platform:
