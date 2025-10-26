@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import type { TooltipProps } from 'recharts'
 import {
   CartesianGrid,
+  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -26,6 +27,7 @@ import {
   CONTRIBUTION_OPTIONS,
   DEFAULT_SETTINGS,
   type CompoundSettings,
+  type Scenario,
 } from './types/finance'
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
@@ -53,19 +55,98 @@ const resolveLanguageCode = (language?: string) => {
 
 const resolveLocale = (language: string) => (language === 'el' ? 'el-GR' : 'en-GB')
 
+const DEFAULT_SCENARIO_LIST: Scenario[] = DEFAULT_SETTINGS.map((scenario) => ({
+  ...scenario,
+  settings: { ...scenario.settings },
+}))
+
+const FALLBACK_COLOR = DEFAULT_SCENARIO_LIST[0]?.color ?? '#10b981'
+const FALLBACK_SETTINGS: CompoundSettings =
+  DEFAULT_SCENARIO_LIST[0]?.settings ?? {
+    principal: 0,
+    contribution: 0,
+    contributionFrequency: 12,
+    annualReturn: 0,
+    compoundingFrequency: 12,
+    years: 1,
+    fundExpenseRatio: 0,
+    platformFee: 0,
+    vuaaShareCount: 0,
+    vuaaPurchasePrice: 0,
+    vuaaPurchaseDate: '',
+  }
+
+const COLOR_PALETTE = [
+  '#10b981',
+  '#6366f1',
+  '#f97316',
+  '#f43f5e',
+  '#14b8a6',
+  '#8b5cf6',
+  '#facc15',
+  '#0ea5e9',
+]
+
+const cloneScenario = (scenario: Scenario): Scenario => ({
+  ...scenario,
+  settings: { ...scenario.settings },
+})
+
+const getDefaultScenarios = () => DEFAULT_SCENARIO_LIST.map((scenario) => cloneScenario(scenario))
+
+const createScenarioId = () => {
+  if (typeof globalThis.crypto !== 'undefined' && 'randomUUID' in globalThis.crypto) {
+    return (globalThis.crypto as Crypto).randomUUID()
+  }
+
+  return `scenario-${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
+const getNextColor = (usedColors: Set<string>) => {
+  for (const color of COLOR_PALETTE) {
+    if (!usedColors.has(color)) {
+      usedColors.add(color)
+      return color
+    }
+  }
+
+  const hue = Math.round(((usedColors.size + 1) * 137.508) % 360)
+  const generated = `hsl(${hue} 70% 50%)`
+  usedColors.add(generated)
+  return generated
+}
+
+const ensureScenarios = (scenarios: Scenario[]) =>
+  scenarios.length ? scenarios.map((scenario) => cloneScenario(scenario)) : getDefaultScenarios()
+
+const INITIAL_SCENARIOS = getDefaultScenarios()
+
 function App() {
   const { t, i18n } = useTranslation()
   const languageCode = resolveLanguageCode(i18n.resolvedLanguage ?? i18n.language)
   const locale = resolveLocale(languageCode)
-  const [settings, setSettings] = useState<CompoundSettings>(DEFAULT_SETTINGS)
+  const [scenarios, setScenarios] = useState<Scenario[]>(() =>
+    INITIAL_SCENARIOS.map((scenario) => cloneScenario(scenario)),
+  )
+  const [activeScenarioId, setActiveScenarioId] = useState<string>(
+    INITIAL_SCENARIOS[0]?.id ?? '',
+  )
   const [loading, setLoading] = useState(true)
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [purchaseDateInput, setPurchaseDateInput] = useState(
-    () => formatDateForInput(DEFAULT_SETTINGS.vuaaPurchaseDate) || '',
+    () => formatDateForInput(INITIAL_SCENARIOS[0]?.settings.vuaaPurchaseDate ?? '') || '',
   )
   const [isEditingPurchaseDate, setIsEditingPurchaseDate] = useState(false)
   const [formulasOpen, setFormulasOpen] = useState(false)
   const formulaPanelId = 'formulas-panel-body'
+  const activeScenario = useMemo(
+    () =>
+      scenarios.find((scenario) => scenario.id === activeScenarioId) ??
+      scenarios[0] ??
+      null,
+    [scenarios, activeScenarioId],
+  )
+  const activeSettings = activeScenario?.settings ?? FALLBACK_SETTINGS
 
   const currencyFormatter = useMemo(
     () =>
@@ -136,6 +217,7 @@ function App() {
 
   useEffect(() => {
     if (!window.configAPI) {
+      setScenarios((prev) => (prev.length ? prev : getDefaultScenarios()))
       setLoading(false)
       return
     }
@@ -143,13 +225,32 @@ function App() {
     window.configAPI
       .load()
       .then((stored) => {
-        if (stored) {
-          setSettings({ ...DEFAULT_SETTINGS, ...stored })
-        }
+        const incoming = ensureScenarios(stored?.scenarios ?? [])
+        setScenarios(incoming)
+        setActiveScenarioId((current) => {
+          if (current && incoming.some((scenario) => scenario.id === current)) {
+            return current
+          }
+
+          return incoming[0]?.id ?? current
+        })
       })
       .catch((error) => console.warn('Unable to load saved settings', error))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (!scenarios.length) {
+      const defaults = getDefaultScenarios()
+      setScenarios(defaults)
+      setActiveScenarioId(defaults[0]?.id ?? '')
+      return
+    }
+
+    if (!activeScenarioId || !scenarios.some((scenario) => scenario.id === activeScenarioId)) {
+      setActiveScenarioId(scenarios[0]?.id ?? activeScenarioId)
+    }
+  }, [scenarios, activeScenarioId])
 
   useEffect(() => {
     if (loading || !window.configAPI) {
@@ -159,51 +260,69 @@ function App() {
     setSaveState('saving')
     const debounce = window.setTimeout(() => {
       window.configAPI
-        ?.save(settings)
+        ?.save({ scenarios })
         .then(() => setSaveState('saved'))
         .catch(() => setSaveState('error'))
     }, 350)
 
     return () => window.clearTimeout(debounce)
-  }, [settings, loading])
+  }, [scenarios, loading])
 
   useEffect(() => {
     if (isEditingPurchaseDate) {
       return
     }
 
-    setPurchaseDateInput(formatDateForInput(settings.vuaaPurchaseDate) || '')
-  }, [settings.vuaaPurchaseDate, isEditingPurchaseDate])
+    setPurchaseDateInput(formatDateForInput(activeSettings.vuaaPurchaseDate) || '')
+  }, [activeSettings.vuaaPurchaseDate, isEditingPurchaseDate])
 
-  const remainingContributionMonths = useMemo(
-    () => getWholeMonthsUntilYearEnd(settings.vuaaPurchaseDate),
-    [settings.vuaaPurchaseDate],
+  const scenarioAnalyses = useMemo(
+    () =>
+      scenarios.map((scenario) => {
+        const months = getWholeMonthsUntilYearEnd(scenario.settings.vuaaPurchaseDate)
+        return {
+          scenario,
+          remainingContributionMonths: months,
+          projection: buildProjection(scenario.settings, { remainingContributionMonths: months }),
+        }
+      }),
+    [scenarios],
   )
+
+  const activeAnalysis =
+    scenarioAnalyses.find((analysis) => analysis.scenario.id === activeScenario?.id) ??
+    scenarioAnalyses[0] ??
+    null
+
+  const remainingContributionMonths =
+    activeAnalysis?.remainingContributionMonths ??
+    getWholeMonthsUntilYearEnd(activeSettings.vuaaPurchaseDate)
+
+  const activeProjection =
+    activeAnalysis?.projection ??
+    buildProjection(activeSettings, { remainingContributionMonths })
 
   const purchaseDateInFuture = useMemo(
-    () => isPurchaseDateInFuture(settings.vuaaPurchaseDate),
-    [settings.vuaaPurchaseDate],
+    () => isPurchaseDateInFuture(activeSettings.vuaaPurchaseDate),
+    [activeSettings.vuaaPurchaseDate],
   )
 
-  const projection = useMemo(
-    () => buildProjection(settings, { remainingContributionMonths }),
-    [settings, remainingContributionMonths],
-  )
-  const expenseDrag = settings.fundExpenseRatio + settings.platformFee
+  const expenseDrag = activeSettings.fundExpenseRatio + activeSettings.platformFee
   const netAnnualRate = useMemo(
-    () => getNetAnnualRate(settings.annualReturn, expenseDrag),
-    [settings.annualReturn, expenseDrag],
+    () => getNetAnnualRate(activeSettings.annualReturn, expenseDrag),
+    [activeSettings.annualReturn, expenseDrag],
   )
   const currentYear = new Date().getFullYear()
-  const withdrawalTooltipLimit = Math.max(Math.ceil(settings.years), 1)
+  const withdrawalTooltipLimit = Math.max(Math.ceil(activeSettings.years), 1)
 
-  const compoundingPeriods = Math.max(settings.compoundingFrequency, 1)
-  const grossReturnRate = settings.annualReturn / 100
+  const compoundingPeriods = Math.max(activeSettings.compoundingFrequency, 1)
+  const grossReturnRate = activeSettings.annualReturn / 100
   const expenseRate = expenseDrag / 100
   const growthFactor = Math.max(1 + netAnnualRate, 0.0001)
   const periodicRate = Math.pow(growthFactor, 1 / compoundingPeriods) - 1
   const contributionPerPeriod =
-    settings.contribution * (settings.contributionFrequency / compoundingPeriods)
+    activeSettings.contribution *
+    (activeSettings.contributionFrequency / compoundingPeriods)
   const normalizedContributionMonths = Math.min(
     Math.max(remainingContributionMonths, 0),
     12,
@@ -212,14 +331,37 @@ function App() {
   const firstYearContributionPerPeriod =
     contributionPerPeriod * firstYearContributionFactor
 
-  const updateField = <K extends keyof CompoundSettings>(
+  const chartData = useMemo(() => {
+    const yearMap = new Map<number, Record<string, number | null>>()
+
+    scenarioAnalyses.forEach(({ scenario, projection }) => {
+      projection.chartPoints.forEach((point) => {
+        const existing = yearMap.get(point.year) ?? {}
+        existing[scenario.id] = point.balance
+        yearMap.set(point.year, existing)
+      })
+    })
+
+    return Array.from(yearMap.entries())
+      .map(([year, entry]) => ({ year, ...entry }))
+      .sort((a, b) => a.year - b.year)
+  }, [scenarioAnalyses])
+
+  const updateActiveScenarioField = <K extends keyof CompoundSettings>(
     field: K,
     value: CompoundSettings[K],
   ) => {
-    setSettings((prev) => ({
-      ...prev,
-      [field]: value,
-    }))
+    if (!activeScenarioId) {
+      return
+    }
+
+    setScenarios((prev) =>
+      prev.map((scenario) =>
+        scenario.id === activeScenarioId
+          ? { ...scenario, settings: { ...scenario.settings, [field]: value } }
+          : scenario,
+      ),
+    )
   }
 
   const handleNumericInputChange =
@@ -227,38 +369,48 @@ function App() {
     (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const nextValue = Number(event.target.value)
       const sanitizedValue = Number.isNaN(nextValue) ? 0 : nextValue
-      updateField(field, sanitizedValue as CompoundSettings[NumericSettingKey])
+      updateActiveScenarioField(field, sanitizedValue as CompoundSettings[NumericSettingKey])
     }
 
   const handlePurchaseDateChange = (event: ChangeEvent<HTMLInputElement>) => {
     const rawValue = event.target.value
     setPurchaseDateInput(rawValue)
 
+    if (!activeScenarioId) {
+      return
+    }
+
     if (rawValue.trim() === '') {
-      updateField('vuaaPurchaseDate', '' as CompoundSettings[DateSettingKey])
+      updateActiveScenarioField('vuaaPurchaseDate', '' as CompoundSettings[DateSettingKey])
       return
     }
 
     const normalized = normalizeDateValue(rawValue)
     if (normalized) {
-      updateField('vuaaPurchaseDate', normalized as CompoundSettings[DateSettingKey])
+      updateActiveScenarioField('vuaaPurchaseDate', normalized as CompoundSettings[DateSettingKey])
     }
   }
 
   const handlePurchaseDateBlur = () => {
     setIsEditingPurchaseDate(false)
 
+    if (!activeScenarioId) {
+      return
+    }
+
     if (purchaseDateInput.trim() === '') {
-      updateField('vuaaPurchaseDate', '' as CompoundSettings[DateSettingKey])
+      updateActiveScenarioField('vuaaPurchaseDate', '' as CompoundSettings[DateSettingKey])
       return
     }
 
     const normalized = normalizeDateValue(purchaseDateInput)
     if (normalized) {
-      updateField('vuaaPurchaseDate', normalized as CompoundSettings[DateSettingKey])
+      updateActiveScenarioField('vuaaPurchaseDate', normalized as CompoundSettings[DateSettingKey])
       setPurchaseDateInput(formatDateForInput(normalized) || '')
+    } else if (activeScenario) {
+      setPurchaseDateInput(formatDateForInput(activeScenario.settings.vuaaPurchaseDate) || '')
     } else {
-      setPurchaseDateInput(formatDateForInput(settings.vuaaPurchaseDate) || '')
+      setPurchaseDateInput('')
     }
   }
 
@@ -268,8 +420,84 @@ function App() {
     void i18n.changeLanguage(event.target.value)
   }
 
+  const handleScenarioSwitch = (event: ChangeEvent<HTMLSelectElement>) => {
+    setIsEditingPurchaseDate(false)
+    setActiveScenarioId(event.target.value)
+  }
+
+  const handleScenarioNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextName = event.target.value
+    if (!activeScenarioId) {
+      return
+    }
+
+    setScenarios((prev) =>
+      prev.map((scenario) =>
+        scenario.id === activeScenarioId ? { ...scenario, name: nextName } : scenario,
+      ),
+    )
+  }
+
+  const handleAddScenario = () => {
+    setScenarios((prev) => {
+      const usedColors = new Set(prev.map((scenario) => scenario.color))
+      const nextColor = getNextColor(usedColors)
+      const nextScenario: Scenario = {
+        id: createScenarioId(),
+        name: t('scenarios.defaultName', { index: prev.length + 1 }),
+        color: nextColor,
+        settings: { ...FALLBACK_SETTINGS },
+      }
+      setActiveScenarioId(nextScenario.id)
+      setIsEditingPurchaseDate(false)
+      return [...prev, nextScenario]
+    })
+  }
+
+  const handleDuplicateScenario = () => {
+    if (!activeScenario) {
+      return
+    }
+
+    setScenarios((prev) => {
+      const usedColors = new Set(prev.map((scenario) => scenario.color))
+      const nextColor = getNextColor(usedColors)
+      const duplicate: Scenario = {
+        id: createScenarioId(),
+        name: t('scenarios.copyName', { name: activeScenario.name }),
+        color: nextColor,
+        settings: { ...activeScenario.settings },
+      }
+      setActiveScenarioId(duplicate.id)
+      setIsEditingPurchaseDate(false)
+      return [...prev, duplicate]
+    })
+  }
+
+  const handleDeleteScenario = () => {
+    setScenarios((prev) => {
+      if (prev.length <= 1) {
+        return prev
+      }
+
+      const filtered = prev.filter((scenario) => scenario.id !== activeScenarioId)
+      if (!filtered.length) {
+        return prev
+      }
+
+      setActiveScenarioId(filtered[0].id)
+      setIsEditingPurchaseDate(false)
+      return filtered
+    })
+  }
+
   const resetDefaults = () => {
-    setSettings({ ...DEFAULT_SETTINGS })
+    const defaults = getDefaultScenarios()
+    setScenarios(defaults)
+    const nextActive = defaults[0]
+    setActiveScenarioId(nextActive?.id ?? '')
+    setIsEditingPurchaseDate(false)
+    setPurchaseDateInput(formatDateForInput(nextActive?.settings.vuaaPurchaseDate ?? '') || '')
   }
 
   const getWithdrawalDate = (yearValue: number) => {
@@ -282,12 +510,12 @@ function App() {
   }
 
   const withdrawalScheduleSummary = useMemo(() => {
-    if (!projection.table.length) {
+    if (!activeProjection.table.length) {
       return ''
     }
 
-    const limit = Math.min(withdrawalTooltipLimit, projection.table.length)
-    const entries = projection.table.slice(0, limit).map((row) => {
+    const limit = Math.min(withdrawalTooltipLimit, activeProjection.table.length)
+    const entries = activeProjection.table.slice(0, limit).map((row) => {
       const withdrawalDate = getWithdrawalDate(row.year)
       return t('table.withdrawalScheduleTooltip', {
         year: decimalFormatter.format(row.year),
@@ -296,23 +524,29 @@ function App() {
       })
     })
 
-    if (projection.table.length > limit) {
+    if (activeProjection.table.length > limit) {
       entries.push(
         t('table.withdrawalScheduleMore', {
-          count: projection.table.length - limit,
+          count: activeProjection.table.length - limit,
         }),
       )
     }
 
     return entries.join('\n')
-  }, [projection.table, t, decimalFormatter, currencyFormatter, withdrawalTooltipLimit])
+  }, [
+    activeProjection.table,
+    t,
+    decimalFormatter,
+    currencyFormatter,
+    withdrawalTooltipLimit,
+  ])
 
   const withdrawalScheduleAriaLabel = withdrawalScheduleSummary
     ? `${t('table.withdrawalScheduleLabel')}: ${withdrawalScheduleSummary.replace(/\n/g, ', ')}`
     : undefined
 
   const renderTable = () =>
-    projection.table.map((row) => {
+    activeProjection.table.map((row) => {
       const withdrawalDate = getWithdrawalDate(row.year)
       return (
         <tr key={row.year}>
@@ -373,6 +607,66 @@ function App() {
             <span className="panel-meta">{t('inputs.description')}</span>
           </div>
 
+          <div className="scenario-controls">
+            <div className="scenario-header">
+              <label className="scenario-label">
+                <span>{t('scenarios.activeLabel')}</span>
+                <div className="scenario-select-wrapper">
+                  <span
+                    className="scenario-color-dot"
+                    aria-hidden="true"
+                    style={{ backgroundColor: activeScenario?.color ?? FALLBACK_COLOR }}
+                  />
+                  <select
+                    value={activeScenario?.id ?? ''}
+                    onChange={handleScenarioSwitch}
+                    className="scenario-select"
+                  >
+                    {scenarios.map((scenario) => (
+                      <option key={scenario.id} value={scenario.id}>
+                        {scenario.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </label>
+              <div className="scenario-actions">
+                <button
+                  type="button"
+                  className="scenario-button"
+                  onClick={handleAddScenario}
+                >
+                  {t('scenarios.add')}
+                </button>
+                <button
+                  type="button"
+                  className="scenario-button"
+                  onClick={handleDuplicateScenario}
+                  disabled={!activeScenario}
+                >
+                  {t('scenarios.duplicate')}
+                </button>
+                <button
+                  type="button"
+                  className="scenario-button"
+                  onClick={handleDeleteScenario}
+                  disabled={scenarios.length <= 1}
+                >
+                  {t('scenarios.delete')}
+                </button>
+              </div>
+            </div>
+            <label className="scenario-label">
+              <span>{t('scenarios.nameLabel')}</span>
+              <input
+                type="text"
+                className="scenario-name-input"
+                value={activeScenario?.name ?? ''}
+                onChange={handleScenarioNameChange}
+              />
+            </label>
+          </div>
+
           <div className="input-grid">
             <label>
               <span>{t('inputs.principal')}</span>
@@ -380,7 +674,7 @@ function App() {
                 type="number"
                 min={0}
                 step={100}
-                value={settings.principal}
+                value={activeSettings.principal}
                 onChange={handleNumericInputChange('principal')}
               />
             </label>
@@ -391,7 +685,7 @@ function App() {
                 type="number"
                 min={0}
                 step={50}
-                value={settings.contribution}
+                value={activeSettings.contribution}
                 onChange={handleNumericInputChange('contribution')}
               />
             </label>
@@ -399,7 +693,7 @@ function App() {
             <label>
               <span>{t('inputs.contributionCadence')}</span>
               <select
-                value={settings.contributionFrequency}
+                value={activeSettings.contributionFrequency}
                 onChange={handleNumericInputChange('contributionFrequency')}
               >
                 {CONTRIBUTION_OPTIONS.map((option) => (
@@ -413,7 +707,7 @@ function App() {
             <label>
               <span>{t('inputs.compoundingFrequency')}</span>
               <select
-                value={settings.compoundingFrequency}
+                value={activeSettings.compoundingFrequency}
                 onChange={handleNumericInputChange('compoundingFrequency')}
               >
                 {COMPOUNDING_OPTIONS.map((option) => (
@@ -431,7 +725,7 @@ function App() {
                 min={0}
                 max={40}
                 step={0.1}
-                value={settings.annualReturn}
+                value={activeSettings.annualReturn}
                 onChange={handleNumericInputChange('annualReturn')}
               />
             </label>
@@ -443,7 +737,7 @@ function App() {
                 min={1}
                 max={60}
                 step={1}
-                value={settings.years}
+                value={activeSettings.years}
                 onChange={handleNumericInputChange('years')}
               />
             </label>
@@ -455,7 +749,7 @@ function App() {
                 min={0}
                 max={2}
                 step={0.01}
-                value={settings.fundExpenseRatio}
+                value={activeSettings.fundExpenseRatio}
                 onChange={handleNumericInputChange('fundExpenseRatio')}
               />
             </label>
@@ -467,7 +761,7 @@ function App() {
                 min={0}
                 max={5}
                 step={0.1}
-                value={settings.platformFee}
+                value={activeSettings.platformFee}
                 onChange={handleNumericInputChange('platformFee')}
               />
             </label>
@@ -478,7 +772,7 @@ function App() {
                 type="number"
                 min={0}
                 step={0.01}
-                value={settings.vuaaShareCount}
+                value={activeSettings.vuaaShareCount}
                 onChange={handleNumericInputChange('vuaaShareCount')}
               />
             </label>
@@ -489,7 +783,7 @@ function App() {
                 type="number"
                 min={0}
                 step={0.01}
-                value={settings.vuaaPurchasePrice}
+                value={activeSettings.vuaaPurchasePrice}
                 onChange={handleNumericInputChange('vuaaPurchasePrice')}
               />
             </label>
@@ -533,11 +827,11 @@ function App() {
           <div className="projection-summary">
             <div>
               <p className="eyebrow">{t('projection.projectedBalance.eyebrow')}</p>
-              <h3>{currencyFormatter.format(projection.totals.endingBalance)}</h3>
+              <h3>{currencyFormatter.format(activeProjection.totals.endingBalance)}</h3>
               <p className="muted">
                 {t('projection.projectedBalance.summary', {
-                  years: settings.years,
-                  grossReturn: percentFormatter.format(settings.annualReturn / 100),
+                  years: activeSettings.years,
+                  grossReturn: percentFormatter.format(activeSettings.annualReturn / 100),
                   expenseDrag: percentFormatter.format(expenseDrag / 100),
                 })}
               </p>
@@ -545,11 +839,11 @@ function App() {
             <div className="stat-grid">
               <StatCard
                 label={t('projection.statCards.totalContributions')}
-                value={currencyFormatter.format(projection.totals.contributions)}
+                value={currencyFormatter.format(activeProjection.totals.contributions)}
               />
               <StatCard
                 label={t('projection.statCards.growth')}
-                value={currencyFormatter.format(projection.totals.growth)}
+                value={currencyFormatter.format(activeProjection.totals.growth)}
               />
               <StatCard
                 label={t('projection.statCards.expenseDrag')}
@@ -560,7 +854,7 @@ function App() {
               <StatCard
                 label={t('projection.statCards.contributionCadence')}
                 value={t('projection.statCards.contributionCadenceValue', {
-                  value: decimalFormatter.format(settings.contributionFrequency),
+                  value: decimalFormatter.format(activeSettings.contributionFrequency),
                 })}
               />
             </div>
@@ -570,18 +864,18 @@ function App() {
                 <div>
                   <dt>{t('projection.holdings.shareCount')}</dt>
                   <dd>
-                    {settings.vuaaShareCount.toLocaleString(locale, {
+                    {activeSettings.vuaaShareCount.toLocaleString(locale, {
                       maximumFractionDigits: 2,
                     })}
                   </dd>
                 </div>
                 <div>
                   <dt>{t('projection.holdings.purchasePrice')}</dt>
-                  <dd>{detailedEuroFormatter.format(settings.vuaaPurchasePrice)}</dd>
+                  <dd>{detailedEuroFormatter.format(activeSettings.vuaaPurchasePrice)}</dd>
                 </div>
                 <div>
                   <dt>{t('projection.holdings.purchaseDate')}</dt>
-                  <dd>{formatHoldingsDate(settings.vuaaPurchaseDate)}</dd>
+                  <dd>{formatHoldingsDate(activeSettings.vuaaPurchaseDate)}</dd>
                 </div>
               </dl>
             </div>
@@ -592,13 +886,7 @@ function App() {
         <section className="panel chart-panel">
           <div className="chart-wrapper">
             <ResponsiveContainer width="100%" height={320}>
-              <LineChart data={projection.chartPoints}>
-                <defs>
-                  <linearGradient id="line" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.2} />
-                  </linearGradient>
-                </defs>
+              <LineChart data={chartData}>
                 <CartesianGrid stroke="#1f2937" strokeDasharray="3 3" />
                 <XAxis
                   dataKey="year"
@@ -609,6 +897,7 @@ function App() {
                   stroke="#9ca3af"
                   tickFormatter={(value) => compactCurrencyFormatter.format(value)}
                 />
+                <Legend wrapperStyle={{ color: '#f5f6f9' }} iconType="circle" />
                 <Tooltip
                   content={
                     <ChartTooltip
@@ -617,13 +906,19 @@ function App() {
                     />
                   }
                 />
-                <Line
-                  type="monotone"
-                  dataKey="balance"
-                  stroke="url(#line)"
-                  strokeWidth={3}
-                  dot={false}
-                />
+                {scenarioAnalyses.map(({ scenario }) => (
+                  <Line
+                    key={scenario.id}
+                    type="monotone"
+                    dataKey={scenario.id}
+                    name={scenario.name}
+                    stroke={scenario.color}
+                    strokeWidth={scenario.id === activeScenarioId ? 3 : 2}
+                    dot={false}
+                    connectNulls
+                    activeDot={{ r: 4 }}
+                  />
+                ))}
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -719,25 +1014,25 @@ function App() {
                 },
               ]}
             />
-            <FormulaBlock
-              title={t('projection.formulas.contribution.title')}
-              equation={t('projection.formulas.contribution.equation')}
-              result={t('projection.formulas.contribution.result', {
-                value: detailedEuroFormatter.format(contributionPerPeriod),
-              })}
-              items={[
-                {
-                  label: t('projection.formulas.labels.contribution'),
-                  value: detailedEuroFormatter.format(settings.contribution),
-                },
-                {
-                  label: t('projection.formulas.labels.contributionFrequency'),
-                  value: t('projection.formulas.contribution.frequencyValue', {
-                    value: decimalFormatter.format(settings.contributionFrequency),
-                  }),
-                },
-                {
-                  label: t('projection.formulas.labels.compounding'),
+              <FormulaBlock
+                title={t('projection.formulas.contribution.title')}
+                equation={t('projection.formulas.contribution.equation')}
+                result={t('projection.formulas.contribution.result', {
+                  value: detailedEuroFormatter.format(contributionPerPeriod),
+                })}
+                items={[
+                  {
+                    label: t('projection.formulas.labels.contribution'),
+                    value: detailedEuroFormatter.format(activeSettings.contribution),
+                  },
+                  {
+                    label: t('projection.formulas.labels.contributionFrequency'),
+                    value: t('projection.formulas.contribution.frequencyValue', {
+                      value: decimalFormatter.format(activeSettings.contributionFrequency),
+                    }),
+                  },
+                  {
+                    label: t('projection.formulas.labels.compounding'),
                   value: t('projection.formulas.periodicRate.compoundingValue', {
                     value: decimalFormatter.format(compoundingPeriods),
                   }),
@@ -753,19 +1048,19 @@ function App() {
               })}
               items={[
                 {
-                  label: t('projection.formulas.labels.monthsRemaining'),
-                  value: decimalFormatter.format(normalizedContributionMonths),
-                },
-                {
-                  label: t('projection.formulas.labels.firstYearFactor'),
-                  value: factorFormatter.format(firstYearContributionFactor),
-                },
-                {
-                  label: t('projection.formulas.labels.firstYearContribution'),
-                  value: detailedEuroFormatter.format(firstYearContributionPerPeriod),
-                },
-              ]}
-            />
+                    label: t('projection.formulas.labels.monthsRemaining'),
+                    value: decimalFormatter.format(normalizedContributionMonths),
+                  },
+                  {
+                    label: t('projection.formulas.labels.firstYearFactor'),
+                    value: factorFormatter.format(firstYearContributionFactor),
+                  },
+                  {
+                    label: t('projection.formulas.labels.firstYearContribution'),
+                    value: detailedEuroFormatter.format(firstYearContributionPerPeriod),
+                  },
+                ]}
+              />
           </div>
         </div>
       </section>
@@ -835,6 +1130,7 @@ const StatusBadge = ({ state }: { state: SaveState }) => {
 const ChartTooltip = ({
   active,
   payload,
+  label,
   formatBalance,
   formatYear,
 }: TooltipProps<number, string> & {
@@ -847,12 +1143,40 @@ const ChartTooltip = ({
     return null
   }
 
-  const point = payload[0].payload as { year: number; balance: number }
+  const filtered = payload.filter(
+    (entry) => typeof entry.value === 'number' && !Number.isNaN(entry.value),
+  )
+
+  if (filtered.length === 0) {
+    return null
+  }
+
+  const firstPayload = payload[0]?.payload as { year?: number } | undefined
+  const fallbackPayload = filtered[0]?.payload as { year?: number } | undefined
+  const resolvedYear =
+    typeof label === 'number'
+      ? label
+      : typeof firstPayload?.year === 'number'
+        ? firstPayload.year
+        : typeof fallbackPayload?.year === 'number'
+          ? fallbackPayload.year
+          : 0
 
   return (
     <div className="tooltip-card">
-      <span>{t('chart.year', { value: formatYear(point.year) })}</span>
-      <strong>{formatBalance(point.balance)}</strong>
+      <span>{t('chart.year', { value: formatYear(resolvedYear) })}</span>
+      <ul className="tooltip-series">
+        {filtered.map((entry) => (
+          <li key={entry.dataKey as string} className="tooltip-series-item">
+            <span
+              className="tooltip-color"
+              style={{ backgroundColor: entry.color ?? FALLBACK_COLOR }}
+            />
+            <span className="tooltip-name">{entry.name}</span>
+            <span className="tooltip-value">{formatBalance(entry.value as number)}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

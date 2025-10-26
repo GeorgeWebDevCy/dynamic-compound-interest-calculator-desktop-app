@@ -33,6 +33,15 @@
       }
     }
   },
+  "scenarios": {
+    "activeLabel": "Ενεργό σενάριο",
+    "add": "Προσθήκη σεναρίου",
+    "duplicate": "Αντιγραφή",
+    "delete": "Διαγραφή",
+    "nameLabel": "Όνομα σεναρίου",
+    "defaultName": "Σενάριο {{index}}",
+    "copyName": "{{name}} (αντίγραφο)"
+  },
   "options": {
     "contribution": {
       "monthly": "Μηνιαία (12×)",

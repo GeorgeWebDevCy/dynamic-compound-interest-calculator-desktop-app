@@ -33,6 +33,15 @@
       }
     }
   },
+  "scenarios": {
+    "activeLabel": "Active scenario",
+    "add": "Add scenario",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "nameLabel": "Scenario name",
+    "defaultName": "Scenario {{index}}",
+    "copyName": "{{name}} copy"
+  },
   "options": {
     "contribution": {
       "monthly": "Monthly (12\u00d7)",

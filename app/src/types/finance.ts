@@ -19,6 +19,13 @@ export type FrequencyOption = {
   value: number
 }
 
+export type Scenario = {
+  id: string
+  name: string
+  color: string
+  settings: CompoundSettings
+}
+
 export const CONTRIBUTION_OPTIONS: FrequencyOption[] = [
   { labelKey: 'options.contribution.monthly', value: 12 },
   { labelKey: 'options.contribution.biweekly', value: 26 },
@@ -36,4 +43,4 @@ export const COMPOUNDING_OPTIONS: FrequencyOption[] = [
   { labelKey: 'options.compounding.annually', value: 1 },
 ]
 
-export const DEFAULT_SETTINGS: CompoundSettings = rawDefaults as CompoundSettings
+export const DEFAULT_SETTINGS: Scenario[] = rawDefaults as Scenario[]
