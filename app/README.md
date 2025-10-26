@@ -50,6 +50,16 @@ Useful scripts:
 - Run `npm run package` only after verifying your Node version with `node -v`.
 - Electron Builder warns when `author`/manufacturer metadata is missing. Add an `author` field to `package.json` to brand MSI artifacts.
 
+## Installing packaged builds
+
+Artifacts generated in `dist/` can be distributed directly to end users:
+
+- **Windows**: share the `.exe` or `.msi`. Running it installs the app under `%LocalAppData%/Programs` and adds Start Menu shortcuts. SmartScreen may warn until the binaries are codesigned.
+- **macOS**: distribute the `.dmg`. Users drag the app into `/Applications` and may need to allow the first run via *System Settings → Privacy & Security* if Gatekeeper flags the unsigned build.
+- **Linux**: send the `.AppImage`. Recipients must `chmod +x` the file and run it (`./Dynamic\ Compound\ Interest-<version>.AppImage`); AppImageLauncher can integrate it with the desktop. Ubuntu users on older releases might need `sudo apt install libfuse2`.
+
+For a user-facing walkthrough (including screenshots), point folks to `../docs/installation.md`.
+
 ## Troubleshooting
 
 | Symptom | Fix |

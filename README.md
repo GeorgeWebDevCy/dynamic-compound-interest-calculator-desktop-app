@@ -79,6 +79,16 @@ npm run build     # produce static renderer assets (dist/)
 npm run start     # launch Electron in production mode after a build
 ```
 
+## Installation
+
+Packaged binaries live under `app/dist/` once you run the platform-specific `npm run package -- --<os>` command, or you can download them from the releases page. Full, step-by-step instructions (including screenshots for AppImage on Ubuntu) are available in `docs/installation.md`, but here is the quick reference:
+
+- **Windows (NSIS/MSI)**: run the installer, click through SmartScreen if needed, and launch Dynamic Compound Interest from the Start Menu. Uninstall via *Settings → Apps*.
+- **macOS (DMG)**: open the DMG, drag the app into `Applications`, then approve the first run under *System Settings → Privacy & Security* if Gatekeeper warns about an unsigned developer.
+- **Linux (AppImage)**: install `libfuse2` if it is missing, make the `.AppImage` executable (`chmod +x`), and run it (`./Dynamic\ Compound\ Interest-<version>.AppImage`). Optionally integrate it with AppImageLauncher for menu entries.
+
+Each platform stores the user configuration in its native `userData` path (see below) so reinstalling/upgrading preserves your latest inputs.
+
 ## Persisted configuration
 
 The most recent inputs are cached in `dynamic-compound-config.json` inside Electron’s `userData` folder, which differs per platform:
