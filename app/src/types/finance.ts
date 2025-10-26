@@ -9,7 +9,6 @@ export type CompoundSettings = {
   years: number
   fundExpenseRatio: number
   platformFee: number
-  targetBalance: number
   vuaaShareCount: number
   vuaaPurchasePrice: number
   vuaaPurchaseDate: string
@@ -18,13 +17,6 @@ export type CompoundSettings = {
 export type FrequencyOption = {
   labelKey: string
   value: number
-}
-
-export type Scenario = {
-  id: string
-  name: string
-  color: string
-  settings: CompoundSettings
 }
 
 export const CONTRIBUTION_OPTIONS: FrequencyOption[] = [
@@ -44,4 +36,4 @@ export const COMPOUNDING_OPTIONS: FrequencyOption[] = [
   { labelKey: 'options.compounding.annually', value: 1 },
 ]
 
-export const DEFAULT_SETTINGS: Scenario[] = rawDefaults as Scenario[]
+export const DEFAULT_SETTINGS: CompoundSettings = rawDefaults as CompoundSettings
