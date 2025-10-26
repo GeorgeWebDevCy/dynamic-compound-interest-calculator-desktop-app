@@ -28,7 +28,7 @@ The app ships with the following assumptions that match a common Freedom24 + VUA
 
 | Input | Default | Notes |
 | --- | --- | --- |
-| Initial principal | €2,000 | Typical first transfer for D-account users |
+| Initial principal | €2,000 | Typical first transfer when opening a new Freedom24 custody account |
 | Periodic contribution | €500 monthly | Automatic monthly top-up |
 | Expected return | 9.5% | Historical S&P 500 average |
 | Compounding | Monthly | Aligns with ETF distribution |
@@ -36,6 +36,24 @@ The app ships with the following assumptions that match a common Freedom24 + VUA
 | Platform fee | 0.50% | Freedom24 custody fee |
 
 Use the “Reset to preset” button in the UI if you want to return to these values.
+
+### How VUAA.EU works on Freedom24
+
+- **ETF basics**: VUAA.EU is the accumulating share class of the Vanguard S&P 500 UCITS ETF traded on Xetra. It reinvests dividends back into the fund, so account growth comes entirely from price appreciation.
+- **Freedom24 settlement**: Purchases settle in euros inside your Freedom24 custody account. The platform charges a 0.50% annual custody fee, which the app models as the “Platform fee.”
+- **Order execution**: Freedom24 forwards market or limit orders to Xetra during trading hours. The ETF is denominated in USD, so Freedom24 handles FX conversion automatically when funding with euros, applying its prevailing conversion spread.
+- **Ongoing contributions**: Scheduling recurring transfers into the custody account ensures that each monthly contribution is available for automatic or manual ETF purchases, matching the calculator’s monthly compounding assumption.
+
+### Compound interest primer
+
+Compound interest is the process of reinvesting growth so that each period’s returns build on the principal plus prior gains. The calculator applies this by:
+
+1. Starting with the initial principal.
+2. Adding the monthly contribution.
+3. Applying the net annual return (market performance minus fund expenses and platform fees) prorated across the chosen compounding frequency.
+4. Repeating the cycle for the duration you set, which produces an exponential growth curve rather than a straight line.
+
+Because VUAA.EU automatically reinvests dividends, the ETF itself behaves like a compound-interest engine: every distribution stays in the fund, and Freedom24 reports the increasing share count and value in euros.
 
 ## Requirements
 
