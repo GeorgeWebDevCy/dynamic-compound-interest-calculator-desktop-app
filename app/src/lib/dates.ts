@@ -87,7 +87,7 @@ export const formatDateForInput = (value: string) => {
   return formatDayMonthYear(parsed)
 }
 
-export const formatHoldingsDate = (value: string, _locale?: string) => {
+export const formatHoldingsDate = (value: string) => {
   const normalized = normalizeDateValue(value)
   const parsed = parseNormalizedDate(normalized)
 
