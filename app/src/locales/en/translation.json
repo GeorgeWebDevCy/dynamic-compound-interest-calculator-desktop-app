@@ -32,7 +32,9 @@
     "defaultName": "Scenario {{index}}",
     "copyName": "{{name}} copy",
     "compareMode": "Compare mode",
-    "selectCompare": "Select scenario to compare"
+    "selectCompare": "Select scenario to compare",
+    "syncF24": "Sync F24",
+    "syncing": "Syncing…"
   },
   "options": {
     "contribution": {
