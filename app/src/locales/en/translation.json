@@ -10,6 +10,16 @@
     "subtitle": "Adjust the assumptions behind the Vanguard S&P 500 UCITS ETF (VUAA.EU) and Freedom24 custody fees to project growth on desktop with instant feedback.",
     "reset": "Reset to preset"
   },
+  "apiSettings": {
+    "triggerLabel": "API",
+    "triggerTitle": "Freedom24 API settings",
+    "heading": "Freedom24 API Configuration",
+    "close": "Close",
+    "apiKey": "API Key",
+    "secretKey": "Secret Key",
+    "save": "Save Keys",
+    "helper": "Keys are stored locally in your browser."
+  },
   "inputs": {
     "title": "Inputs",
     "description": "Every change recalculates instantly",

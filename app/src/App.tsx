@@ -720,9 +720,10 @@ function App() {
           <button
             className="ghost"
             onClick={() => setShowApiSettings(!showApiSettings)}
-            title="Freedom24 API Settings"
+            title={t('apiSettings.triggerTitle')}
+            aria-label={t('apiSettings.triggerTitle')}
           >
-            API
+            {t('apiSettings.triggerLabel')}
           </button>
           <select
             aria-label={t('language.label')}
@@ -751,12 +752,18 @@ function App() {
       {showApiSettings && (
         <div className="panel api-settings-panel">
           <div className="panel-head">
-            <h2>Freedom24 API Configuration</h2>
-            <button className="ghost" onClick={() => setShowApiSettings(false)}>✕</button>
+            <h2>{t('apiSettings.heading')}</h2>
+            <button
+              className="ghost"
+              onClick={() => setShowApiSettings(false)}
+              aria-label={t('apiSettings.close')}
+            >
+              {t('apiSettings.close')}
+            </button>
           </div>
           <div className="input-grid">
             <label>
-              <span>API Key</span>
+              <span>{t('apiSettings.apiKey')}</span>
               <input
                 type="password"
                 value={apiConfig.apiKey}
@@ -764,7 +771,7 @@ function App() {
               />
             </label>
             <label>
-              <span>Secret Key</span>
+              <span>{t('apiSettings.secretKey')}</span>
               <input
                 type="password"
                 value={apiConfig.secretKey}
@@ -773,9 +780,11 @@ function App() {
             </label>
           </div>
           <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
-            <button className="scenario-button" onClick={saveApiConfig}>Save Keys</button>
+            <button className="scenario-button" onClick={saveApiConfig}>
+              {t('apiSettings.save')}
+            </button>
             <p className="muted" style={{ fontSize: '0.8rem', alignSelf: 'center' }}>
-              Keys are stored locally in your browser.
+              {t('apiSettings.helper')}
             </p>
           </div>
         </div>
