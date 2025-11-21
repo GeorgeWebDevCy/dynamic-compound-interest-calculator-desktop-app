@@ -698,6 +698,7 @@ function App() {
           <td>
             <div className="withdrawal-cell">
               <strong>{currencyFormatter.format(row.allowedWithdrawal)}</strong>
+              {' '}
               <span className="muted withdrawal-detail">
                 {t('table.withdrawalDetailLabel')}{' '}
                 <time dateTime={withdrawalDate.iso}>{withdrawalDate.label}</time>
