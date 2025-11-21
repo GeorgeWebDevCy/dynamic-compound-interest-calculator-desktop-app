@@ -1028,8 +1028,9 @@ function App() {
                   style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}
                   onClick={handleSync}
                   disabled={isSyncing}
+                  aria-label={isSyncing ? t('inputs.syncing') : t('inputs.syncF24')}
                 >
-                  {isSyncing ? 'Syncing...' : 'Sync F24'}
+                  {isSyncing ? t('inputs.syncing') : t('inputs.syncF24')}
                 </button>
               </div>
               <input

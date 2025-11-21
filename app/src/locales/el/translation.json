@@ -32,7 +32,9 @@
     "defaultName": "Σενάριο {{index}}",
     "copyName": "{{name}} (αντίγραφο)",
     "compareMode": "Λειτουργία σύγκρισης",
-    "selectCompare": "Επιλέξτε σενάριο για σύγκριση"
+    "selectCompare": "Επιλέξτε σενάριο για σύγκριση",
+    "syncF24": "Συγχρονισμός F24",
+    "syncing": "Συγχρονίζεται…"
   },
   "options": {
     "contribution": {
