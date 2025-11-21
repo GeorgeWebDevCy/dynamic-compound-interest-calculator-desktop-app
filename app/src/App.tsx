@@ -81,6 +81,7 @@ const FALLBACK_SETTINGS: CompoundSettings =
     vuaaPurchasePrice: 0,
     vuaaPurchaseDate: '',
     inflationRate: 0,
+    annualExpenses: 0,
   }
 
 const COLOR_PALETTE = [
@@ -553,7 +554,7 @@ function App() {
       const nextColor = getNextColor(usedColors)
       const nextScenario: Scenario = {
         id: createScenarioId(),
-        name: t('scenarios.defaultName', { index: prev.length + 1 }),
+        name: t('inputs.defaultName', { index: prev.length + 1 }),
         color: nextColor,
         settings: { ...FALLBACK_SETTINGS },
       }
@@ -816,7 +817,7 @@ function App() {
                   className="scenario-button"
                   onClick={handleAddScenario}
                 >
-                  {t('scenarios.add')}
+                  {t('inputs.add')}
                 </button>
                 <button
                   type="button"
@@ -824,7 +825,7 @@ function App() {
                   onClick={handleDuplicateScenario}
                   disabled={!activeScenario}
                 >
-                  {t('scenarios.duplicate')}
+                  {t('inputs.duplicate')}
                 </button>
                 <button
                   type="button"
@@ -832,12 +833,12 @@ function App() {
                   onClick={handleDeleteScenario}
                   disabled={scenarios.length <= 1}
                 >
-                  {t('scenarios.delete')}
+                  {t('inputs.delete')}
                 </button>
               </div>
             </div>
             <label className="scenario-label">
-              <span>{t('scenarios.nameLabel')}</span>
+              <span>{t('inputs.nameLabel')}</span>
               <input
                 type="text"
                 className="scenario-name-input"
@@ -853,7 +854,7 @@ function App() {
                   checked={compareMode}
                   onChange={(e) => setCompareMode(e.target.checked)}
                 />
-                <span>{t('scenarios.compareMode')}</span>
+                <span>{t('inputs.compareMode')}</span>
               </label>
 
               {compareMode && (
@@ -863,7 +864,7 @@ function App() {
                   className="scenario-select"
                 >
                   <option value="" disabled>
-                    {t('scenarios.selectCompare')}
+                    {t('inputs.selectCompare')}
                   </option>
                   {scenarios
                     .filter((s) => s.id !== activeScenarioId)
@@ -989,6 +990,17 @@ function App() {
             </label>
 
             <label>
+              <span>{t('inputs.annualExpenses')}</span>
+              <input
+                type="number"
+                min={0}
+                step={1000}
+                value={activeSettings.annualExpenses ?? 0}
+                onChange={handleNumericInputChange('annualExpenses')}
+              />
+            </label>
+
+            <label>
               <span>{t('inputs.targetBalance')}</span>
               <input
                 type="number"
@@ -1056,7 +1068,6 @@ function App() {
             </label>
           </div>
         </section>
-
         <section className="panel">
           <div className="panel-head">
             <h2>{t('projection.title')}</h2>
@@ -1080,6 +1091,29 @@ function App() {
                   })}
                 </p>
               </div>
+
+              {activeProjection.fireMetrics && activeProjection.fireMetrics.fireNumber > 0 && (
+                <div className="goal-card fire-card" style={{ borderColor: '#f43f5e' }}>
+                  <p className="eyebrow" style={{ color: '#f43f5e' }}>{t('projection.fire.title')}</p>
+                  <h4>
+                    {activeProjection.fireMetrics.fireYear !== null
+                      ? t('projection.fire.achieved')
+                      : t('projection.fire.years', { value: '∞' })}
+                  </h4>
+                  <p className="muted">
+                    {t('projection.fire.number')}: {currencyFormatter.format(activeProjection.fireMetrics.fireNumber)}
+                  </p>
+                  {activeProjection.fireMetrics.fireYear !== null && (
+                    <p className="muted">
+                      {t('projection.goal.metSummary', {
+                        year: decimalFormatter.format(activeProjection.fireMetrics.fireYear),
+                        balance: currencyFormatter.format(activeProjection.fireMetrics.fireNumber),
+                      })}
+                    </p>
+                  )}
+                </div>
+              )}
+
               {activeSettings.targetBalance > 0 && (
                 <div className="goal-card">
                   <p className="eyebrow">{t('projection.goal.eyebrow')}</p>
@@ -1173,6 +1207,19 @@ function App() {
                     })}
                   </p>
                 </div>
+                {compareProjection.fireMetrics && compareProjection.fireMetrics.fireNumber > 0 && (
+                  <div className="goal-card fire-card" style={{ borderColor: '#f43f5e' }}>
+                    <p className="eyebrow" style={{ color: '#f43f5e' }}>{t('projection.fire.title')}</p>
+                    <h4>
+                      {compareProjection.fireMetrics.fireYear !== null
+                        ? t('projection.fire.achieved')
+                        : t('projection.fire.years', { value: '∞' })}
+                    </h4>
+                    <p className="muted">
+                      {t('projection.fire.number')}: {currencyFormatter.format(compareProjection.fireMetrics.fireNumber)}
+                    </p>
+                  </div>
+                )}
                 <div className="stat-grid">
                   <StatCard
                     label={t('projection.statCards.totalContributions')}
@@ -1186,7 +1233,6 @@ function App() {
               </div>
             )}
           </div>
-
         </section>
 
         <section className="panel chart-panel">
@@ -1411,7 +1457,7 @@ function App() {
           </div>
         </div>
       </section>
-    </div >
+    </div>
   )
 }
 

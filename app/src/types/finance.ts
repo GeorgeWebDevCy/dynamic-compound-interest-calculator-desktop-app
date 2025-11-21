@@ -1,4 +1,4 @@
-import rawDefaults from '../shared/default-settings.json'
+
 
 export type CompoundSettings = {
   principal: number
@@ -14,6 +14,7 @@ export type CompoundSettings = {
   vuaaPurchasePrice: number
   vuaaPurchaseDate: string
   inflationRate: number
+  annualExpenses: number
 }
 
 export type FrequencyOption = {
@@ -45,4 +46,26 @@ export const COMPOUNDING_OPTIONS: FrequencyOption[] = [
   { labelKey: 'options.compounding.annually', value: 1 },
 ]
 
-export const DEFAULT_SETTINGS: Scenario[] = rawDefaults as Scenario[]
+export const DEFAULT_SETTINGS: Scenario[] = [
+  {
+    id: 'default',
+    name: 'Default Scenario',
+    color: '#10b981',
+    settings: {
+      principal: 10000,
+      contribution: 500,
+      contributionFrequency: 12,
+      annualReturn: 7,
+      compoundingFrequency: 12,
+      years: 20,
+      fundExpenseRatio: 0.07,
+      platformFee: 0,
+      targetBalance: 1000000,
+      vuaaShareCount: 0,
+      vuaaPurchasePrice: 0,
+      vuaaPurchaseDate: '',
+      inflationRate: 2,
+      annualExpenses: 24000,
+    },
+  },
+]

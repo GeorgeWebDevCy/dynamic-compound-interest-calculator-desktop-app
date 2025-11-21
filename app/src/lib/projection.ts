@@ -27,6 +27,11 @@ export type ProjectionResult = {
     growth: number
     endingBalance: number
   }
+  fireMetrics: {
+    fireNumber: number
+    yearsToFire: number | null
+    fireYear: number | null
+  }
 }
 
 const clampPositive = (value: number, fallback: number) =>
@@ -39,6 +44,8 @@ export const buildProjection = (
   const compounding = clampPositive(settings.compoundingFrequency, 1)
   const years = clampPositive(settings.years, 1)
   const inflationRate = (settings.inflationRate ?? 0) / 100
+  const annualExpenses = settings.annualExpenses ?? 0
+  const fireNumber = annualExpenses * 25
 
   const contributionPerPeriod =
     settings.contribution * (settings.contributionFrequency / compounding)
@@ -62,6 +69,12 @@ export const buildProjection = (
 
   let balance = settings.principal
   let totalContributions = settings.principal
+  let fireYear: number | null = null
+
+  // Check if starting balance is already FIRE
+  if (fireNumber > 0 && balance >= fireNumber) {
+    fireYear = 0
+  }
 
   for (let period = 1; period <= totalPeriods; period += 1) {
     balance *= 1 + periodicRate
@@ -80,6 +93,11 @@ export const buildProjection = (
       // Calculate real value (discounting for inflation)
       const discountFactor = Math.pow(1 + inflationRate, year)
       const realBalance = balance / discountFactor
+
+      // Check for FIRE
+      if (fireNumber > 0 && fireYear === null && realBalance >= fireNumber) {
+        fireYear = year
+      }
 
       chartPoints.push({ year, balance: realBalance })
       table.push({
@@ -105,6 +123,11 @@ export const buildProjection = (
       contributions: totalContributions,
       growth,
       endingBalance: realEndingBalance,
+    },
+    fireMetrics: {
+      fireNumber,
+      yearsToFire: fireYear,
+      fireYear,
     },
   }
 }

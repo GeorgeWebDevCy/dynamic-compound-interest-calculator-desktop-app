@@ -15,28 +15,6 @@
     "description": "Every change recalculates instantly",
     "principal": "Initial principal (\u20ac)",
     "contribution": "Periodic contribution (\u20ac)",
-    "contributionCadence": "Contribution cadence",
-    "compoundingFrequency": "Compounding frequency",
-    "annualReturn": "Expected annual return (%)",
-    "duration": "Investment duration (years)",
-    "expenseRatio": "ETF expense ratio (VUAA \u2014 0.07%)",
-    "platformFee": "Platform fee (Freedom24 custody %)",
-    "inflationRate": "Inflation rate (%)",
-    "targetBalance": "Target balance (\u20ac)",
-    "shareCount": "VUAA shares held",
-    "purchasePrice": "Average purchase price (\u20ac)",
-    "purchaseDate": {
-      "label": "Last purchase date",
-      "hint": {
-        "future": "Purchase date is in the future \u2014 contributions begin once it passes.",
-        "none": "No whole months remain in {{year}} after today.",
-        "remaining_one": "{{count}} whole month remains in {{year}} to plan contributions.",
-        "remaining_other": "{{count}} whole months remain in {{year}} to plan contributions."
-      }
-    }
-  },
-  "scenarios": {
-    "activeLabel": "Active scenario",
     "add": "Add scenario",
     "duplicate": "Duplicate",
     "delete": "Delete",
