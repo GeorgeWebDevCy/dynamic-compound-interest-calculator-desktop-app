@@ -67,6 +67,12 @@
       "unmetTitle": "Target not reached",
       "unmetSummary": "Projection never meets the {{value}} goal within the selected duration."
     },
+    "fire": {
+      "title": "FIRE milestone",
+      "achieved": "FIRE target reached",
+      "years": "Years to FIRE: {{value}}",
+      "number": "FIRE number"
+    },
     "statCards": {
       "totalContributions": "Total contributions",
       "growth": "Growth / returns",

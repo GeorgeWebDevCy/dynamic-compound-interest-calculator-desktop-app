@@ -67,6 +67,12 @@
       "unmetTitle": "Ο στόχος δεν επιτεύχθηκε",
       "unmetSummary": "Η προβολή δεν φτάνει ποτέ τον στόχο {{value}} στη διάρκεια που επιλέχθηκε."
     },
+    "fire": {
+      "title": "Ορόσημο FIRE",
+      "achieved": "Επιτεύχθηκε ο στόχος FIRE",
+      "years": "Έτη μέχρι το FIRE: {{value}}",
+      "number": "Αριθμός FIRE"
+    },
     "statCards": {
       "totalContributions": "Συνολικές καταθέσεις",
       "growth": "Ανάπτυξη / αποδόσεις",
