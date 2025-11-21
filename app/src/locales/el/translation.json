@@ -36,6 +36,10 @@
     "syncF24": "Συγχρονισμός F24",
     "syncing": "Συγχρονίζεται…"
   },
+  "scenarios": {
+    "activeLabel": "Ενεργό σενάριο",
+    "copyName": "{{name}} (αντίγραφο)"
+  },
   "options": {
     "contribution": {
       "monthly": "Μηνιαία (12×)",
