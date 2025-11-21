@@ -34,7 +34,15 @@
     "compareMode": "Compare mode",
     "selectCompare": "Select scenario to compare",
     "syncF24": "Sync F24",
-    "syncing": "Syncing…"
+    "syncing": "Syncing…",
+    "purchaseDate": {
+      "label": "Last purchase date",
+      "hint": {
+        "future": "Purchase date cannot be in the future.",
+        "none": "No contribution months left in {{year}}.",
+        "remaining": "{{count}} contribution months remaining in {{year}}."
+      }
+    }
   },
   "scenarios": {
     "activeLabel": "Active scenario",
