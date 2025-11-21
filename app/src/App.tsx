@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TooltipProps } from 'recharts'
 import {
+  Brush,
   CartesianGrid,
   Legend,
   Line,
@@ -12,7 +13,6 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  Brush,
 } from 'recharts'
 import confetti from 'canvas-confetti'
 import './App.css'
@@ -25,6 +25,7 @@ import {
 } from './lib/dates'
 import { createPrefixedCurrencyFormatter } from './lib/currency'
 import { exportProjectionTableAsCsv, exportProjectionTableAsXlsx } from './lib/export'
+import { fetchQuote, fetchPortfolio, type Freedom24Config } from './lib/freedom24'
 import { buildProjection, getNetAnnualRate } from './lib/projection'
 import {
   COMPOUNDING_OPTIONS,
@@ -146,7 +147,27 @@ function App() {
   const [compareMode, setCompareMode] = useState(false)
   const [compareScenarioId, setCompareScenarioId] = useState<string>('')
   const [formulasOpen, setFormulasOpen] = useState(false)
+  const [apiConfig, setApiConfig] = useState<Freedom24Config>({ apiKey: '', secretKey: '' })
+  const [showApiSettings, setShowApiSettings] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
+
   const formulaPanelId = 'formulas-panel-body'
+
+  // Load API keys from local storage on mount
+  useEffect(() => {
+    const storedKey = localStorage.getItem('f24_apiKey')
+    const storedSecret = localStorage.getItem('f24_secretKey')
+    if (storedKey && storedSecret) {
+      setApiConfig({ apiKey: storedKey, secretKey: storedSecret })
+    }
+  }, [])
+
+  const saveApiConfig = () => {
+    localStorage.setItem('f24_apiKey', apiConfig.apiKey)
+    localStorage.setItem('f24_secretKey', apiConfig.secretKey)
+    setShowApiSettings(false)
+  }
+
   const activeScenario = useMemo(
     () =>
       scenarios.find((scenario) => scenario.id === activeScenarioId) ??
@@ -155,6 +176,49 @@ function App() {
     [scenarios, activeScenarioId],
   )
   const activeSettings = activeScenario?.settings ?? FALLBACK_SETTINGS
+
+  const handleSync = async () => {
+    if (!apiConfig.apiKey || !apiConfig.secretKey) {
+      setShowApiSettings(true)
+      return
+    }
+
+    if (!activeScenarioId) return
+
+    setIsSyncing(true)
+    try {
+      // 1. Fetch VUAA Quote
+      const quote = await fetchQuote('VUAA')
+
+      // 2. Fetch Portfolio
+      const portfolio = await fetchPortfolio(apiConfig)
+      const vuaaPosition = portfolio.find(p => p.ticker === 'VUAA' || p.ticker === 'VUAA.EU')
+
+      setScenarios((prev) =>
+        prev.map((scenario) => {
+          if (scenario.id !== activeScenarioId) return scenario
+
+          const newSettings = { ...scenario.settings }
+          if (vuaaPosition) {
+            newSettings.vuaaShareCount = vuaaPosition.q
+            newSettings.vuaaPurchasePrice = vuaaPosition.avg_price
+          }
+
+          return { ...scenario, settings: newSettings }
+        })
+      )
+
+      if (quote) {
+        console.log('Current VUAA Price:', quote.ltp)
+      }
+
+    } catch (error) {
+      console.error('Sync failed:', error)
+      alert('Failed to sync with Freedom24. Check your keys and internet connection.')
+    } finally {
+      setIsSyncing(false)
+    }
+  }
 
   const currencyFormatter = useMemo(
     () =>
@@ -336,7 +400,6 @@ function App() {
   const activeMilestone =
     (activeScenario?.id ? milestoneMap.get(activeScenario.id) : undefined) ?? null
 
-
   useEffect(() => {
     if (activeMilestone) {
       void confetti({
@@ -346,7 +409,7 @@ function App() {
         colors: ['#10b981', '#3b82f6', '#f59e0b'],
       })
     }
-  }, [activeMilestone?.year]) // Trigger only when the milestone year changes (or first appears)
+  }, [activeMilestone?.year])
 
   const purchaseDateInFuture = useMemo(
     () => isPurchaseDateInFuture(activeSettings.vuaaPurchaseDate),
@@ -653,6 +716,13 @@ function App() {
           <p className="subtitle">{t('header.subtitle')}</p>
         </div>
         <div className="header-actions">
+          <button
+            className="ghost"
+            onClick={() => setShowApiSettings(!showApiSettings)}
+            title="Freedom24 API Settings"
+          >
+            API
+          </button>
           <select
             aria-label={t('language.label')}
             value={languageCode}
@@ -676,6 +746,39 @@ function App() {
           </button>
         </div>
       </header>
+
+      {showApiSettings && (
+        <div className="panel api-settings-panel">
+          <div className="panel-head">
+            <h2>Freedom24 API Configuration</h2>
+            <button className="ghost" onClick={() => setShowApiSettings(false)}>✕</button>
+          </div>
+          <div className="input-grid">
+            <label>
+              <span>API Key</span>
+              <input
+                type="password"
+                value={apiConfig.apiKey}
+                onChange={(e) => setApiConfig(prev => ({ ...prev, apiKey: e.target.value }))}
+              />
+            </label>
+            <label>
+              <span>Secret Key</span>
+              <input
+                type="password"
+                value={apiConfig.secretKey}
+                onChange={(e) => setApiConfig(prev => ({ ...prev, secretKey: e.target.value }))}
+              />
+            </label>
+          </div>
+          <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
+            <button className="scenario-button" onClick={saveApiConfig}>Save Keys</button>
+            <p className="muted" style={{ fontSize: '0.8rem', alignSelf: 'center' }}>
+              Keys are stored locally in your browser.
+            </p>
+          </div>
+        </div>
+      )}
 
       <main className="grid">
         <section className="panel">
@@ -897,7 +1000,17 @@ function App() {
             </label>
 
             <label>
-              <span>{t('inputs.shareCount')}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>{t('inputs.shareCount')}</span>
+                <button
+                  className="ghost"
+                  style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}
+                  onClick={handleSync}
+                  disabled={isSyncing}
+                >
+                  {isSyncing ? 'Syncing...' : 'Sync F24'}
+                </button>
+              </div>
               <input
                 type="number"
                 min={0}
@@ -1048,10 +1161,7 @@ function App() {
                   <h3>{currencyFormatter.format(compareProjection.totals.endingBalance)}</h3>
                   <p className="muted">
                     {t('projection.projectedBalance.summary', {
-                      years: activeSettings.years, // Assuming same duration for comparison? Or should we use compareSettings?
-                      // The comparison scenario has its own settings.
-                      // I need compareSettings.
-                      // Let's get compareSettings from compareAnalysis.scenario.settings
+                      years: activeSettings.years,
                       grossReturn: percentFormatter.format(
                         (compareAnalysis?.scenario.settings.annualReturn ?? 0) / 100,
                       ),
@@ -1063,8 +1173,6 @@ function App() {
                     })}
                   </p>
                 </div>
-                {/* Simplified comparison view - maybe omit goal card or keep it? Let's keep it simple for now or duplicate logic if easy. */}
-                {/* I'll duplicate the stat grid for the comparison scenario */}
                 <div className="stat-grid">
                   <StatCard
                     label={t('projection.statCards.totalContributions')}
@@ -1303,7 +1411,7 @@ function App() {
           </div>
         </div>
       </section>
-    </div>
+    </div >
   )
 }
 
@@ -1421,20 +1529,14 @@ const ChartTooltip = ({
               {(() => {
                 const dataKey = String(entry.dataKey ?? '')
                 const milestone = milestones.get(dataKey)
-                const milestoneReached =
-                  milestone && Math.abs(resolvedYear - milestone.year) < 0.01
-
-                if (!milestoneReached) {
-                  return null
+                if (milestone && milestone.year === resolvedYear) {
+                  return (
+                    <div className="tooltip-milestone">
+                      <span>🎉 {t('chart.tooltip.goalReached', { value: formatBalance(milestone.target) })}</span>
+                    </div>
+                  )
                 }
-
-                return (
-                  <span className="tooltip-note">
-                    {t('chart.tooltip.goalReached', {
-                      value: formatBalance(milestone.target),
-                    })}
-                  </span>
-                )
+                return null
               })()}
             </div>
           </li>

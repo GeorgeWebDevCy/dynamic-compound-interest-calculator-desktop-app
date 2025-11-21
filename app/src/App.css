@@ -454,21 +454,6 @@ tbody tr:hover {
 }
 
 .status.saved {
-  background: rgba(56, 189, 248, 0.1);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.2);
-}
-
-.status.error {
-  background: rgba(248, 113, 113, 0.1);
-  color: #f87171;
-  border: 1px solid rgba(248, 113, 113, 0.2);
-}
-
-@media (max-width: 768px) {
-  .app-shell {
-    padding-inline: 1rem;
-  }
 
   .panel {
     padding: 1.5rem;
