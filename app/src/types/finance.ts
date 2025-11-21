@@ -13,6 +13,7 @@ export type CompoundSettings = {
   vuaaShareCount: number
   vuaaPurchasePrice: number
   vuaaPurchaseDate: string
+  inflationRate: number
 }
 
 export type FrequencyOption = {

@@ -12,7 +12,9 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  Brush,
 } from 'recharts'
+import confetti from 'canvas-confetti'
 import './App.css'
 import {
   formatDateForInput,
@@ -77,6 +79,7 @@ const FALLBACK_SETTINGS: CompoundSettings =
     vuaaShareCount: 0,
     vuaaPurchasePrice: 0,
     vuaaPurchaseDate: '',
+    inflationRate: 0,
   }
 
 const COLOR_PALETTE = [
@@ -140,6 +143,8 @@ function App() {
     () => formatDateForInput(INITIAL_SCENARIOS[0]?.settings.vuaaPurchaseDate ?? '') || '',
   )
   const [isEditingPurchaseDate, setIsEditingPurchaseDate] = useState(false)
+  const [compareMode, setCompareMode] = useState(false)
+  const [compareScenarioId, setCompareScenarioId] = useState<string>('')
   const [formulasOpen, setFormulasOpen] = useState(false)
   const formulaPanelId = 'formulas-panel-body'
   const activeScenario = useMemo(
@@ -297,6 +302,9 @@ function App() {
     scenarioAnalyses[0] ??
     null
 
+  const compareAnalysis =
+    scenarioAnalyses.find((analysis) => analysis.scenario.id === compareScenarioId) ?? null
+
   const remainingContributionMonths =
     activeAnalysis?.remainingContributionMonths ??
     getWholeMonthsUntilYearEnd(activeSettings.vuaaPurchaseDate)
@@ -304,6 +312,8 @@ function App() {
   const activeProjection =
     activeAnalysis?.projection ??
     buildProjection(activeSettings, { remainingContributionMonths })
+
+  const compareProjection = compareAnalysis?.projection ?? null
 
   const milestoneMap = useMemo(() => {
     const milestones = new Map<string, { year: number; value: number; target: number }>()
@@ -325,6 +335,18 @@ function App() {
 
   const activeMilestone =
     (activeScenario?.id ? milestoneMap.get(activeScenario.id) : undefined) ?? null
+
+
+  useEffect(() => {
+    if (activeMilestone) {
+      void confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#10b981', '#3b82f6', '#f59e0b'],
+      })
+    }
+  }, [activeMilestone?.year]) // Trigger only when the milestone year changes (or first appears)
 
   const purchaseDateInFuture = useMemo(
     () => isPurchaseDateInFuture(activeSettings.vuaaPurchaseDate),
@@ -390,11 +412,11 @@ function App() {
 
   const handleNumericInputChange =
     (field: NumericSettingKey) =>
-    (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      const nextValue = Number(event.target.value)
-      const sanitizedValue = Number.isNaN(nextValue) ? 0 : nextValue
-      updateActiveScenarioField(field, sanitizedValue as CompoundSettings[NumericSettingKey])
-    }
+      (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const nextValue = Number(event.target.value)
+        const sanitizedValue = Number.isNaN(nextValue) ? 0 : nextValue
+        updateActiveScenarioField(field, sanitizedValue as CompoundSettings[NumericSettingKey])
+      }
 
   const handlePurchaseDateChange = (event: ChangeEvent<HTMLInputElement>) => {
     const rawValue = event.target.value
@@ -607,18 +629,18 @@ function App() {
         <tr key={row.year}>
           <td>{t('table.yearValue', { value: decimalFormatter.format(row.year) })}</td>
           <td>{currencyFormatter.format(row.endingBalance)}</td>
-        <td>{currencyFormatter.format(row.contributions)}</td>
-        <td>{currencyFormatter.format(row.growth)}</td>
-        <td>
-          <div className="withdrawal-cell">
-            <strong>{currencyFormatter.format(row.allowedWithdrawal)}</strong>
-            <span className="muted withdrawal-detail">
-              {t('table.withdrawalDetailLabel')}{' '}
-              <time dateTime={withdrawalDate.iso}>{withdrawalDate.label}</time>
-            </span>
-          </div>
-        </td>
-      </tr>
+          <td>{currencyFormatter.format(row.contributions)}</td>
+          <td>{currencyFormatter.format(row.growth)}</td>
+          <td>
+            <div className="withdrawal-cell">
+              <strong>{currencyFormatter.format(row.allowedWithdrawal)}</strong>
+              <span className="muted withdrawal-detail">
+                {t('table.withdrawalDetailLabel')}{' '}
+                <time dateTime={withdrawalDate.iso}>{withdrawalDate.label}</time>
+              </span>
+            </div>
+          </td>
+        </tr>
       )
     })
 
@@ -720,6 +742,36 @@ function App() {
                 onChange={handleScenarioNameChange}
               />
             </label>
+
+            <div className="scenario-compare-controls">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={compareMode}
+                  onChange={(e) => setCompareMode(e.target.checked)}
+                />
+                <span>{t('scenarios.compareMode')}</span>
+              </label>
+
+              {compareMode && (
+                <select
+                  value={compareScenarioId}
+                  onChange={(e) => setCompareScenarioId(e.target.value)}
+                  className="scenario-select"
+                >
+                  <option value="" disabled>
+                    {t('scenarios.selectCompare')}
+                  </option>
+                  {scenarios
+                    .filter((s) => s.id !== activeScenarioId)
+                    .map((scenario) => (
+                      <option key={scenario.id} value={scenario.id}>
+                        {scenario.name}
+                      </option>
+                    ))}
+                </select>
+              )}
+            </div>
           </div>
 
           <div className="input-grid">
@@ -822,6 +874,18 @@ function App() {
             </label>
 
             <label>
+              <span>{t('inputs.inflationRate')}</span>
+              <input
+                type="number"
+                min={0}
+                max={20}
+                step={0.1}
+                value={activeSettings.inflationRate}
+                onChange={handleNumericInputChange('inflationRate')}
+              />
+            </label>
+
+            <label>
               <span>{t('inputs.targetBalance')}</span>
               <input
                 type="number"
@@ -872,9 +936,9 @@ function App() {
                   : remainingContributionMonths === 0
                     ? t('inputs.purchaseDate.hint.none', { year: currentYear })
                     : t('inputs.purchaseDate.hint.remaining', {
-                        count: remainingContributionMonths,
-                        year: currentYear,
-                      })}
+                      count: remainingContributionMonths,
+                      year: currentYear,
+                    })}
               </span>
             </label>
           </div>
@@ -890,90 +954,129 @@ function App() {
             </span>
           </div>
 
-          <div className="projection-summary">
-            <div>
-              <p className="eyebrow">{t('projection.projectedBalance.eyebrow')}</p>
-              <h3>{currencyFormatter.format(activeProjection.totals.endingBalance)}</h3>
-              <p className="muted">
-                {t('projection.projectedBalance.summary', {
-                  years: activeSettings.years,
-                  grossReturn: percentFormatter.format(activeSettings.annualReturn / 100),
-                  expenseDrag: percentFormatter.format(expenseDrag / 100),
-                })}
-              </p>
+          <div className={compareMode && compareProjection ? 'comparison-grid' : ''}>
+            <div className="projection-summary">
+              <div>
+                <p className="eyebrow">{t('projection.projectedBalance.eyebrow')}</p>
+                <h3>{currencyFormatter.format(activeProjection.totals.endingBalance)}</h3>
+                <p className="muted">
+                  {t('projection.projectedBalance.summary', {
+                    years: activeSettings.years,
+                    grossReturn: percentFormatter.format(activeSettings.annualReturn / 100),
+                    expenseDrag: percentFormatter.format(expenseDrag / 100),
+                  })}
+                </p>
+              </div>
+              {activeSettings.targetBalance > 0 && (
+                <div className="goal-card">
+                  <p className="eyebrow">{t('projection.goal.eyebrow')}</p>
+                  {activeMilestone ? (
+                    <>
+                      <h4>
+                        {t('projection.goal.metTitle', {
+                          value: currencyFormatter.format(activeSettings.targetBalance),
+                        })}
+                      </h4>
+                      <p className="muted">
+                        {t('projection.goal.metSummary', {
+                          year: decimalFormatter.format(activeMilestone.year),
+                          balance: currencyFormatter.format(activeMilestone.value),
+                        })}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <h4>{t('projection.goal.unmetTitle')}</h4>
+                      <p className="muted">
+                        {t('projection.goal.unmetSummary', {
+                          value: currencyFormatter.format(activeSettings.targetBalance),
+                        })}
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
+              <div className="stat-grid">
+                <StatCard
+                  label={t('projection.statCards.totalContributions')}
+                  value={currencyFormatter.format(activeProjection.totals.contributions)}
+                />
+                <StatCard
+                  label={t('projection.statCards.growth')}
+                  value={currencyFormatter.format(activeProjection.totals.growth)}
+                />
+                <StatCard
+                  label={t('projection.statCards.expenseDrag')}
+                  value={t('projection.statCards.expenseDragValue', {
+                    value: percentFormatter.format(expenseDrag / 100),
+                  })}
+                />
+                <StatCard
+                  label={t('projection.statCards.contributionCadence')}
+                  value={t('projection.statCards.contributionCadenceValue', {
+                    value: decimalFormatter.format(activeSettings.contributionFrequency),
+                  })}
+                />
+              </div>
+              <div className="holdings-card">
+                <h4>{t('projection.holdings.title')}</h4>
+                <dl>
+                  <div>
+                    <dt>{t('projection.holdings.shareCount')}</dt>
+                    <dd>
+                      {activeSettings.vuaaShareCount.toLocaleString(locale, {
+                        maximumFractionDigits: 2,
+                      })}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>{t('projection.holdings.purchasePrice')}</dt>
+                    <dd>{detailedEuroFormatter.format(activeSettings.vuaaPurchasePrice)}</dd>
+                  </div>
+                  <div>
+                    <dt>{t('projection.holdings.purchaseDate')}</dt>
+                    <dd>{formatHoldingsDate(activeSettings.vuaaPurchaseDate)}</dd>
+                  </div>
+                </dl>
+              </div>
             </div>
-            {activeSettings.targetBalance > 0 && (
-              <div className="goal-card">
-                <p className="eyebrow">{t('projection.goal.eyebrow')}</p>
-                {activeMilestone ? (
-                  <>
-                    <h4>
-                      {t('projection.goal.metTitle', {
-                        value: currencyFormatter.format(activeSettings.targetBalance),
-                      })}
-                    </h4>
-                    <p className="muted">
-                      {t('projection.goal.metSummary', {
-                        year: decimalFormatter.format(activeMilestone.year),
-                        balance: currencyFormatter.format(activeMilestone.value),
-                      })}
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <h4>{t('projection.goal.unmetTitle')}</h4>
-                    <p className="muted">
-                      {t('projection.goal.unmetSummary', {
-                        value: currencyFormatter.format(activeSettings.targetBalance),
-                      })}
-                    </p>
-                  </>
-                )}
+
+            {compareMode && compareProjection && (
+              <div className="projection-summary">
+                <div>
+                  <p className="eyebrow">{t('projection.projectedBalance.eyebrow')}</p>
+                  <h3>{currencyFormatter.format(compareProjection.totals.endingBalance)}</h3>
+                  <p className="muted">
+                    {t('projection.projectedBalance.summary', {
+                      years: activeSettings.years, // Assuming same duration for comparison? Or should we use compareSettings?
+                      // The comparison scenario has its own settings.
+                      // I need compareSettings.
+                      // Let's get compareSettings from compareAnalysis.scenario.settings
+                      grossReturn: percentFormatter.format(
+                        (compareAnalysis?.scenario.settings.annualReturn ?? 0) / 100,
+                      ),
+                      expenseDrag: percentFormatter.format(
+                        ((compareAnalysis?.scenario.settings.fundExpenseRatio ?? 0) +
+                          (compareAnalysis?.scenario.settings.platformFee ?? 0)) /
+                        100,
+                      ),
+                    })}
+                  </p>
+                </div>
+                {/* Simplified comparison view - maybe omit goal card or keep it? Let's keep it simple for now or duplicate logic if easy. */}
+                {/* I'll duplicate the stat grid for the comparison scenario */}
+                <div className="stat-grid">
+                  <StatCard
+                    label={t('projection.statCards.totalContributions')}
+                    value={currencyFormatter.format(compareProjection.totals.contributions)}
+                  />
+                  <StatCard
+                    label={t('projection.statCards.growth')}
+                    value={currencyFormatter.format(compareProjection.totals.growth)}
+                  />
+                </div>
               </div>
             )}
-            <div className="stat-grid">
-              <StatCard
-                label={t('projection.statCards.totalContributions')}
-                value={currencyFormatter.format(activeProjection.totals.contributions)}
-              />
-              <StatCard
-                label={t('projection.statCards.growth')}
-                value={currencyFormatter.format(activeProjection.totals.growth)}
-              />
-              <StatCard
-                label={t('projection.statCards.expenseDrag')}
-                value={t('projection.statCards.expenseDragValue', {
-                  value: percentFormatter.format(expenseDrag / 100),
-                })}
-              />
-              <StatCard
-                label={t('projection.statCards.contributionCadence')}
-                value={t('projection.statCards.contributionCadenceValue', {
-                  value: decimalFormatter.format(activeSettings.contributionFrequency),
-                })}
-              />
-            </div>
-            <div className="holdings-card">
-              <h4>{t('projection.holdings.title')}</h4>
-              <dl>
-                <div>
-                  <dt>{t('projection.holdings.shareCount')}</dt>
-                  <dd>
-                    {activeSettings.vuaaShareCount.toLocaleString(locale, {
-                      maximumFractionDigits: 2,
-                    })}
-                  </dd>
-                </div>
-                <div>
-                  <dt>{t('projection.holdings.purchasePrice')}</dt>
-                  <dd>{detailedEuroFormatter.format(activeSettings.vuaaPurchasePrice)}</dd>
-                </div>
-                <div>
-                  <dt>{t('projection.holdings.purchaseDate')}</dt>
-                  <dd>{formatHoldingsDate(activeSettings.vuaaPurchaseDate)}</dd>
-                </div>
-              </dl>
-            </div>
           </div>
 
         </section>
@@ -1028,6 +1131,13 @@ function App() {
                     }}
                   />
                 )}
+                <Brush
+                  dataKey="year"
+                  height={30}
+                  stroke="#3b82f6"
+                  fill="rgba(15, 23, 42, 0.5)"
+                  tickFormatter={(value) => decimalFormatter.format(value)}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -1143,25 +1253,25 @@ function App() {
                 },
               ]}
             />
-              <FormulaBlock
-                title={t('projection.formulas.contribution.title')}
-                equation={t('projection.formulas.contribution.equation')}
-                result={t('projection.formulas.contribution.result', {
-                  value: detailedEuroFormatter.format(contributionPerPeriod),
-                })}
-                items={[
-                  {
-                    label: t('projection.formulas.labels.contribution'),
-                    value: detailedEuroFormatter.format(activeSettings.contribution),
-                  },
-                  {
-                    label: t('projection.formulas.labels.contributionFrequency'),
-                    value: t('projection.formulas.contribution.frequencyValue', {
-                      value: decimalFormatter.format(activeSettings.contributionFrequency),
-                    }),
-                  },
-                  {
-                    label: t('projection.formulas.labels.compounding'),
+            <FormulaBlock
+              title={t('projection.formulas.contribution.title')}
+              equation={t('projection.formulas.contribution.equation')}
+              result={t('projection.formulas.contribution.result', {
+                value: detailedEuroFormatter.format(contributionPerPeriod),
+              })}
+              items={[
+                {
+                  label: t('projection.formulas.labels.contribution'),
+                  value: detailedEuroFormatter.format(activeSettings.contribution),
+                },
+                {
+                  label: t('projection.formulas.labels.contributionFrequency'),
+                  value: t('projection.formulas.contribution.frequencyValue', {
+                    value: decimalFormatter.format(activeSettings.contributionFrequency),
+                  }),
+                },
+                {
+                  label: t('projection.formulas.labels.compounding'),
                   value: t('projection.formulas.periodicRate.compoundingValue', {
                     value: decimalFormatter.format(compoundingPeriods),
                   }),
@@ -1177,19 +1287,19 @@ function App() {
               })}
               items={[
                 {
-                    label: t('projection.formulas.labels.monthsRemaining'),
-                    value: decimalFormatter.format(normalizedContributionMonths),
-                  },
-                  {
-                    label: t('projection.formulas.labels.firstYearFactor'),
-                    value: factorFormatter.format(firstYearContributionFactor),
-                  },
-                  {
-                    label: t('projection.formulas.labels.firstYearContribution'),
-                    value: detailedEuroFormatter.format(firstYearContributionPerPeriod),
-                  },
-                ]}
-              />
+                  label: t('projection.formulas.labels.monthsRemaining'),
+                  value: decimalFormatter.format(normalizedContributionMonths),
+                },
+                {
+                  label: t('projection.formulas.labels.firstYearFactor'),
+                  value: factorFormatter.format(firstYearContributionFactor),
+                },
+                {
+                  label: t('projection.formulas.labels.firstYearContribution'),
+                  value: detailedEuroFormatter.format(firstYearContributionPerPeriod),
+                },
+              ]}
+            />
           </div>
         </div>
       </section>

@@ -38,6 +38,7 @@ export const buildProjection = (
 ): ProjectionResult => {
   const compounding = clampPositive(settings.compoundingFrequency, 1)
   const years = clampPositive(settings.years, 1)
+  const inflationRate = (settings.inflationRate ?? 0) / 100
 
   const contributionPerPeriod =
     settings.contribution * (settings.contributionFrequency / compounding)
@@ -75,20 +76,27 @@ export const buildProjection = (
     const isYearBoundary = period % compounding === 0 || period === totalPeriods
     if (isYearBoundary) {
       const year = Number((period / compounding).toFixed(2))
-      const growth = Math.max(balance - totalContributions, 0)
-      chartPoints.push({ year, balance })
+
+      // Calculate real value (discounting for inflation)
+      const discountFactor = Math.pow(1 + inflationRate, year)
+      const realBalance = balance / discountFactor
+
+      chartPoints.push({ year, balance: realBalance })
       table.push({
         year,
-        endingBalance: balance,
+        endingBalance: realBalance,
         contributions: totalContributions,
-        growth,
-        allowedWithdrawal: balance * WITHDRAWAL_RATE,
+        growth: Math.max(realBalance - totalContributions, 0),
+        allowedWithdrawal: realBalance * WITHDRAWAL_RATE,
       })
     }
   }
 
   const endingBalance = balance
-  const growth = Math.max(endingBalance - totalContributions, 0)
+  // Calculate real ending balance for totals
+  const discountFactorFinal = Math.pow(1 + inflationRate, years)
+  const realEndingBalance = endingBalance / discountFactorFinal
+  const growth = Math.max(realEndingBalance - totalContributions, 0)
 
   return {
     chartPoints,
@@ -96,7 +104,7 @@ export const buildProjection = (
     totals: {
       contributions: totalContributions,
       growth,
-      endingBalance,
+      endingBalance: realEndingBalance,
     },
   }
 }

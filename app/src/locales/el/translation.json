@@ -21,6 +21,7 @@
     "duration": "Διάρκεια επένδυσης (έτη)",
     "expenseRatio": "Δείκτης εξόδων ETF (VUAA — 0,07%)",
     "platformFee": "Προμήθεια πλατφόρμας (Freedom24 % θεματοφυλακής)",
+    "inflationRate": "Πληθωρισμός (%)",
     "targetBalance": "Στόχος υπολοίπου (€)",
     "shareCount": "Μετοχές VUAA",
     "purchasePrice": "Μέση τιμή αγοράς (€)",
@@ -41,7 +42,9 @@
     "delete": "Διαγραφή",
     "nameLabel": "Όνομα σεναρίου",
     "defaultName": "Σενάριο {{index}}",
-    "copyName": "{{name}} (αντίγραφο)"
+    "copyName": "{{name}} (αντίγραφο)",
+    "compareMode": "Λειτουργία σύγκρισης",
+    "selectCompare": "Επιλέξτε σενάριο για σύγκριση"
   },
   "options": {
     "contribution": {
