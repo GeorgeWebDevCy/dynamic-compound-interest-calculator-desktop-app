@@ -36,6 +36,10 @@
     "syncF24": "Sync F24",
     "syncing": "Syncing…"
   },
+  "scenarios": {
+    "activeLabel": "Active scenario",
+    "copyName": "{{name}} copy"
+  },
   "options": {
     "contribution": {
       "monthly": "Monthly (12\u00d7)",
