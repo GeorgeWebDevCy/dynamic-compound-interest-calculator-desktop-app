@@ -821,7 +821,12 @@ function App() {
             ))}
           </select>
           <StatusBadge state={loading ? 'saving' : saveState} />
-          <button className="ghost" type="button" onClick={resetDefaults}>
+          <button
+            className="ghost"
+            type="button"
+            onClick={resetDefaults}
+            aria-label={t('header.reset')}
+          >
             {t('header.reset')}
           </button>
         </div>
@@ -858,7 +863,11 @@ function App() {
             </label>
           </div>
           <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
-            <button className="scenario-button" onClick={saveApiConfig}>
+            <button
+              className="scenario-button"
+              onClick={saveApiConfig}
+              aria-label={t('apiSettings.save')}
+            >
               {t('apiSettings.save')}
             </button>
             <p className="muted" style={{ fontSize: '0.8rem', alignSelf: 'center' }}>
@@ -903,6 +912,7 @@ function App() {
                   type="button"
                   className="scenario-button"
                   onClick={handleAddScenario}
+                  aria-label={t('inputs.add')}
                 >
                   {t('inputs.add')}
                 </button>
@@ -911,6 +921,7 @@ function App() {
                   className="scenario-button"
                   onClick={handleDuplicateScenario}
                   disabled={!activeScenario}
+                  aria-label={t('inputs.duplicate')}
                 >
                   {t('inputs.duplicate')}
                 </button>
@@ -919,6 +930,7 @@ function App() {
                   className="scenario-button"
                   onClick={handleDeleteScenario}
                   disabled={scenarios.length <= 1}
+                  aria-label={t('inputs.delete')}
                 >
                   {t('inputs.delete')}
                 </button>
@@ -1431,6 +1443,7 @@ function App() {
               className="scenario-button"
               onClick={handleExportCsv}
               disabled={!hasTableRows}
+              aria-label={t('table.actions.exportCsv')}
             >
               {t('table.actions.exportCsv')}
             </button>
@@ -1439,6 +1452,7 @@ function App() {
               className="scenario-button"
               onClick={handleExportXlsx}
               disabled={!hasTableRows}
+              aria-label={t('table.actions.exportXlsx')}
             >
               {t('table.actions.exportXlsx')}
             </button>
@@ -1482,6 +1496,7 @@ function App() {
           className="collapsible-trigger"
           aria-expanded={formulasOpen}
           aria-controls={formulaPanelId}
+          aria-label={t('projection.formulas.title')}
           onClick={() => setFormulasOpen((open) => !open)}
         >
           <div>
