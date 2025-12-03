@@ -167,6 +167,7 @@
       "endingBalance": "End balance",
       "contributions": "Total contributions",
       "growth": "Growth / returns",
+      "reinvested": "Reinvested",
       "withdrawal": "Allowed withdrawal (4%)"
     },
     "yearValue": "Year {{value}}",

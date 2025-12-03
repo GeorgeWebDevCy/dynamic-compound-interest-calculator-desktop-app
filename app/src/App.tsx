@@ -695,6 +695,7 @@ function App() {
           <td>{currencyFormatter.format(row.endingBalance)}</td>
           <td>{currencyFormatter.format(row.contributions)}</td>
           <td>{currencyFormatter.format(row.growth)}</td>
+          <td>{currencyFormatter.format(row.annualInterest)}</td>
           <td>
             <div className="withdrawal-cell">
               <strong>{currencyFormatter.format(row.allowedWithdrawal)}</strong>
@@ -1343,6 +1344,7 @@ function App() {
                 <th>{t('table.headers.endingBalance')}</th>
                 <th>{t('table.headers.contributions')}</th>
                 <th>{t('table.headers.growth')}</th>
+                <th>{t('table.headers.reinvested')}</th>
                 <th className="withdrawal-header">
                   <span>
                     {t('table.headers.withdrawal')}

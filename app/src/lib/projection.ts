@@ -16,6 +16,7 @@ export type YearlyBreakdown = {
   endingBalance: number
   contributions: number
   growth: number
+  annualInterest: number
   allowedWithdrawal: number
 }
 
@@ -70,6 +71,7 @@ export const buildProjection = (
   let balance = settings.principal
   let totalContributions = settings.principal
   let fireYear: number | null = null
+  let previousGrowth = 0
 
   // Check if starting balance is already FIRE
   if (fireNumber > 0 && balance >= fireNumber) {
@@ -99,12 +101,17 @@ export const buildProjection = (
         fireYear = year
       }
 
+      const currentGrowth = Math.max(realBalance - totalContributions, 0)
+      const annualInterest = currentGrowth - previousGrowth
+      previousGrowth = currentGrowth
+
       chartPoints.push({ year, balance: realBalance })
       table.push({
         year,
         endingBalance: realBalance,
         contributions: totalContributions,
-        growth: Math.max(realBalance - totalContributions, 0),
+        growth: currentGrowth,
+        annualInterest,
         allowedWithdrawal: realBalance * WITHDRAWAL_RATE,
       })
     }

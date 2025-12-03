@@ -73,14 +73,26 @@ describe('buildProjection - FIRE Metrics', () => {
         }
         const result = buildProjection(settings)
         expect(result.fireMetrics.fireNumber).toBe(0)
-        // If fireNumber is 0, logic might vary, but usually we don't show FIRE metrics.
-        // Based on implementation: if fireNumber > 0 checks are present.
-        // Let's check what the function returns.
-        // If fireNumber is 0, it shouldn't trigger "met" unless we explicitly handle 0 target.
-        // But usually 0 expenses means 0 target, which is met instantly? 
-        // Or ignored?
-        // In the code: if (fireNumber > 0 && balance >= fireNumber) -> fireYear = 0
-        // So if fireNumber is 0, fireYear remains null (initialized to null).
         expect(result.fireMetrics.fireYear).toBeNull()
+    })
+
+    it('calculates annualInterest correctly', () => {
+        const settings = {
+            ...baseSettings,
+            principal: 10000,
+            contribution: 0,
+            annualReturn: 10,
+            years: 2,
+            inflationRate: 0,
+            fundExpenseRatio: 0,
+            platformFee: 0,
+        }
+        const result = buildProjection(settings)
+
+        // Year 1: 10000 * 1.1 = 11000. Growth = 1000. Annual Interest = 1000.
+        expect(result.table[0].annualInterest).toBeCloseTo(1000, 0)
+
+        // Year 2: 11000 * 1.1 = 12100. Total Growth = 2100. Previous Growth = 1000. Annual Interest = 1100.
+        expect(result.table[1].annualInterest).toBeCloseTo(1100, 0)
     })
 })
