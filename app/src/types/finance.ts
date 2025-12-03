@@ -15,6 +15,8 @@ export type CompoundSettings = {
   vuaaPurchaseDate: string
   inflationRate: number
   annualExpenses: number
+  birthDate: string
+  retirementAge: number
 }
 
 export type FrequencyOption = {
@@ -66,6 +68,8 @@ export const DEFAULT_SETTINGS: Scenario[] = [
       vuaaPurchaseDate: '',
       inflationRate: 2,
       annualExpenses: 24000,
+      birthDate: '30/10/1982',
+      retirementAge: 67,
     },
   },
 ]

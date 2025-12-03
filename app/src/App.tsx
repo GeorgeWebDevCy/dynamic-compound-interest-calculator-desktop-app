@@ -22,6 +22,7 @@ import {
   getWholeMonthsUntilYearEnd,
   isPurchaseDateInFuture,
   normalizeDateValue,
+  calculateAge,
 } from './lib/dates'
 import { createPrefixedCurrencyFormatter } from './lib/currency'
 import { exportProjectionTableAsCsv, exportProjectionTableAsXlsx } from './lib/export'
@@ -82,6 +83,8 @@ const FALLBACK_SETTINGS: CompoundSettings =
     vuaaPurchaseDate: '',
     inflationRate: 0,
     annualExpenses: 0,
+    birthDate: '',
+    retirementAge: 0,
   }
 
 const COLOR_PALETTE = [
@@ -144,7 +147,11 @@ function App() {
   const [purchaseDateInput, setPurchaseDateInput] = useState(
     () => formatDateForInput(INITIAL_SCENARIOS[0]?.settings.vuaaPurchaseDate ?? '') || '',
   )
+  const [birthDateInput, setBirthDateInput] = useState(
+    () => formatDateForInput(INITIAL_SCENARIOS[0]?.settings.birthDate ?? '') || '',
+  )
   const [isEditingPurchaseDate, setIsEditingPurchaseDate] = useState(false)
+  const [isEditingBirthDate, setIsEditingBirthDate] = useState(false)
   const [compareMode, setCompareMode] = useState(false)
   const [compareScenarioId, setCompareScenarioId] = useState<string>('')
   const [formulasOpen, setFormulasOpen] = useState(false)
@@ -349,6 +356,29 @@ function App() {
     setPurchaseDateInput(formatDateForInput(activeSettings.vuaaPurchaseDate) || '')
   }, [activeSettings.vuaaPurchaseDate, isEditingPurchaseDate])
 
+  useEffect(() => {
+    if (isEditingBirthDate) {
+      return
+    }
+
+    setBirthDateInput(formatDateForInput(activeSettings.birthDate) || '')
+  }, [activeSettings.birthDate, isEditingBirthDate])
+
+  // Auto-calculate Duration based on Birth Date and Retirement Age
+  useEffect(() => {
+    if (!activeSettings.birthDate || !activeSettings.retirementAge) {
+      return
+    }
+
+    const age = calculateAge(activeSettings.birthDate)
+    const yearsToRetirement = Math.max(activeSettings.retirementAge - age, 1)
+
+    // Only update if different to avoid loops, though strict mode might double invoke
+    if (activeSettings.years !== yearsToRetirement) {
+      updateActiveScenarioField('years', yearsToRetirement)
+    }
+  }, [activeSettings.birthDate, activeSettings.retirementAge])
+
   const scenarioAnalyses = useMemo(
     () =>
       scenarios.map((scenario) => {
@@ -526,6 +556,50 @@ function App() {
 
   const handlePurchaseDateFocus = () => setIsEditingPurchaseDate(true)
 
+  const handleBirthDateChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const rawValue = event.target.value
+    setBirthDateInput(rawValue)
+
+    if (!activeScenarioId) {
+      return
+    }
+
+    if (rawValue.trim() === '') {
+      updateActiveScenarioField('birthDate', '' as CompoundSettings[DateSettingKey])
+      return
+    }
+
+    const normalized = normalizeDateValue(rawValue)
+    if (normalized) {
+      updateActiveScenarioField('birthDate', normalized as CompoundSettings[DateSettingKey])
+    }
+  }
+
+  const handleBirthDateBlur = () => {
+    setIsEditingBirthDate(false)
+
+    if (!activeScenarioId) {
+      return
+    }
+
+    if (birthDateInput.trim() === '') {
+      updateActiveScenarioField('birthDate', '' as CompoundSettings[DateSettingKey])
+      return
+    }
+
+    const normalized = normalizeDateValue(birthDateInput)
+    if (normalized) {
+      updateActiveScenarioField('birthDate', normalized as CompoundSettings[DateSettingKey])
+      setBirthDateInput(formatDateForInput(normalized) || '')
+    } else if (activeScenario) {
+      setBirthDateInput(formatDateForInput(activeScenario.settings.birthDate) || '')
+    } else {
+      setBirthDateInput('')
+    }
+  }
+
+  const handleBirthDateFocus = () => setIsEditingBirthDate(true)
+
   const handleLanguageChange = (event: ChangeEvent<HTMLSelectElement>) => {
     void i18n.changeLanguage(event.target.value)
   }
@@ -608,6 +682,8 @@ function App() {
     setActiveScenarioId(nextActive?.id ?? '')
     setIsEditingPurchaseDate(false)
     setPurchaseDateInput(formatDateForInput(nextActive?.settings.vuaaPurchaseDate ?? '') || '')
+    setIsEditingBirthDate(false)
+    setBirthDateInput(formatDateForInput(nextActive?.settings.birthDate ?? '') || '')
   }
 
   const getWithdrawalDate = useCallback(
@@ -890,6 +966,39 @@ function App() {
           </div>
 
           <div className="input-grid">
+            <label>
+              <span>{t('inputs.birthDate')}</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="\\d{2}/\\d{2}/\\d{4}"
+                placeholder="dd/mm/yyyy"
+                value={birthDateInput}
+                onChange={handleBirthDateChange}
+                onBlur={handleBirthDateBlur}
+                onFocus={handleBirthDateFocus}
+              />
+              <span className="input-hint">
+                {activeSettings.birthDate && (
+                  <>
+                    {t('inputs.currentAge', { age: calculateAge(activeSettings.birthDate) })}
+                  </>
+                )}
+              </span>
+            </label>
+
+            <label>
+              <span>{t('inputs.retirementAge')}</span>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                value={activeSettings.retirementAge}
+                onChange={handleNumericInputChange('retirementAge')}
+              />
+            </label>
+
             <label>
               <span>{t('inputs.principal')}</span>
               <input

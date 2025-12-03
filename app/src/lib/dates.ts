@@ -145,3 +145,17 @@ export const getWholeMonthsUntilYearEnd = (
 
   return Math.max(months, 0)
 }
+
+export const calculateAge = (birthDate: string, referenceDate = new Date()) => {
+  const birth = parseNormalizedDate(normalizeDateValue(birthDate))
+  if (!birth) {
+    return 0
+  }
+
+  let age = referenceDate.getFullYear() - birth.getFullYear()
+  const m = referenceDate.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && referenceDate.getDate() < birth.getDate())) {
+    age--
+  }
+  return age
+}
